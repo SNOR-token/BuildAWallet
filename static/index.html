@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Build-a-Wallet: design your own crypto wallet, one question at a time</title>
+<meta name="description" content="Talk to the wallet architect and watch your own crypto wallet assemble itself: coins, custody, security, features, look. 150 options, no code, a shareable blueprint at the end.">
+<meta name="theme-color" content="#0a0c11">
+<meta property="og:title" content="Build-a-Wallet">
+<meta property="og:description" content="Describe the crypto wallet you want. Watch it build itself, screen by screen.">
+<meta property="og:type" content="website">
+<link rel="icon" href="/static/favicon.svg?v=1" type="image/svg+xml">
+<link rel="stylesheet" href="/static/style.css?v=2">
+</head>
+<body>
+<div class="app">
+
+  <section class="pane pane-chat">
+    <header class="head">
+      <div class="logo">
+        <div class="logo-mark">W</div>
+        <div>Build-a-Wallet<small>the wallet architect</small></div>
+      </div>
+      <div class="head-spacer"></div>
+      <div class="progress-wrap">
+        <div class="progress"><i id="bar"></i></div>
+        <span class="pill"><b id="chosen">0</b> / <span id="total">150</span> options</span>
+      </div>
+    </header>
+
+    <div class="chat" id="chat" aria-live="polite"></div>
+    <div class="chips" id="chips"></div>
+
+    <div class="composer">
+      <form id="form">
+        <textarea id="input" rows="1" placeholder="Tell me what this wallet should do..." autocomplete="off"></textarea>
+        <button class="send" id="sendBtn" type="submit">Send</button>
+      </form>
+      <div class="hint">Try: <em>bitcoin and stablecoins, no seed phrase, face ID, swap and staking</em></div>
+    </div>
+  </section>
+
+  <section class="pane pane-build">
+    <nav class="tabs">
+      <button class="tab on" data-view="preview">Live preview</button>
+      <button class="tab" data-view="blueprint">Blueprint</button>
+      <button class="tab" data-view="vault">Option vault</button>
+      <div class="head-spacer"></div>
+      <span class="pill" id="builtPill"></span>
+    </nav>
+    <div class="view view-preview" id="view"></div>
+  </section>
+
+</div>
+<div class="toast" id="toast"></div>
+<script src="/static/app.js?v=2"></script>
+</body>
+</html>

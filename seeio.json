@@ -1,0 +1,4 @@
+{
+  "name": "Build-a-Wallet",
+  "healthcheck": "/healthz"
+}
