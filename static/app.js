@@ -103,7 +103,9 @@
     el.className = "msg " + who;
     var tag = who === "ai" ? "AI" : who === "me" ? "You" : "";
     el.innerHTML = '<div class="who">' + esc(tag) + "</div><div class='bubble'>" + md(text) + "</div>";
-    $("#chat").appendChild(el);
+    var chips = $("#chips");
+    if (chips && chips.parentNode === $("#chat")) $("#chat").insertBefore(el, chips);
+    else $("#chat").appendChild(el);
     scrollChat();
     return el;
   }
@@ -118,11 +120,15 @@
     var el = document.createElement("div");
     el.className = "msg ai"; el.id = "typing";
     el.innerHTML = '<div class="who">AI</div><div class="bubble typing"><span></span><span></span><span></span></div>';
-    $("#chat").appendChild(el);
+    var chipbox = $("#chips");
+    if (chipbox && chipbox.parentNode === $("#chat")) $("#chat").insertBefore(el, chipbox);
+    else $("#chat").appendChild(el);
     scrollChat();
   }
   function renderChips(chips) {
     var box = $("#chips");
+    if (box.parentNode !== $("#chat")) $("#chat").appendChild(box);
+    else $("#chat").appendChild(box);
     box.innerHTML = "";
     (chips || []).forEach(function (c, i) {
       var b = document.createElement("button");
@@ -132,6 +138,7 @@
       b.onclick = function () { send(c.send); };
       box.appendChild(b);
     });
+    scrollChat();
   }
 
   function setView(name) {
@@ -325,7 +332,13 @@
         return walletHeader() +
           '<div class="w-card"><div class="w-label">Total balance</div><div class="w-balance">$0.00</div>' +
           '<div class="w-delta">Waiting for your first decision</div></div>' +
-          '<div class="w-empty">Nothing in here yet.<br>Tell the architect which coins it should hold and this screen fills in.</div>';
+          '<div class="w-empty">Nothing in here yet.<br>Tell the architect which coins it should hold and this screen fills in.</div>' +
+          '<div class="w-rows">' + [0, 1, 2].map(function (i) {
+            return '<div class="w-row ghost" style="animation-delay:' + (i * 140) + 'ms">' +
+              '<div class="w-coin ghost-c"></div><div class="w-rowmain">' +
+              '<i class="ln" style="width:' + (58 - i * 9) + '%"></i><i class="ln sm" style="width:' + (34 - i * 6) + '%"></i>' +
+              "</div></div>";
+          }).join("") + "</div>";
       }
       var rnd = seeded(hash(SPEC.name || "w"));
       var delta = (rnd() * 9 - 2.4);
