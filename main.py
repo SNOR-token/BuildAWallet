@@ -106,8 +106,9 @@ def clean_state(raw: dict | None) -> dict:
         v = raw.get(k)
         if isinstance(v, list):
             state[k] = [str(x)[:40] for x in v[:400]]
-    if isinstance(raw.get("current"), str):
-        state["current"] = raw["current"][:40]
+    for k in ("current", "last_q"):
+        if isinstance(raw.get(k), str):
+            state[k] = raw[k][:200]
     if isinstance(raw.get("turns"), int):
         state["turns"] = max(0, min(raw["turns"], 100000))
     state["finished"] = bool(raw.get("finished"))

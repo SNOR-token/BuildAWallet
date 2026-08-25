@@ -154,7 +154,9 @@ INSIGHTS = {
 
 PRESETS = {
     "beginner": {
-        "kw": ["beginner", "first time", "my mum", "my mom", "grandma", "newbie", "non technical", "normal people", "easy"],
+        "kw": ["beginner", "first time", "first wallet", "never held", "never owned", "never used",
+               "new to crypto", "my mum", "my mom", "grandma", "grandpa", "newbie", "novice",
+               "non technical", "not technical", "normal people", "ordinary people", "no idea about crypto"],
         "name": "Onboard",
         "purpose": "First time users who have never held crypto",
         "spec": {
@@ -299,11 +301,21 @@ def _preset_allowed(text: str, state: dict) -> bool:
 
 
 def detect_preset(text: str) -> str | None:
+    """Spot a persona, unless the sentence is refusing it.
+
+    The refusal has to sit in front of the phrase to count, so "never held
+    crypto" still reads as a beginner while "not for beginners" does not.
+    """
     t = text.lower()
+    cues = [m.end() for m in NEG.finditer(t)]
     for key, p in PRESETS.items():
         for k in p["kw"]:
-            if k in t:
-                return key
+            i = t.find(k)
+            if i < 0:
+                continue
+            if any(0 <= i - c <= NEG_REACH for c in cues):
+                continue
+            return key
     return None
 
 
@@ -493,7 +505,7 @@ def blank_spec() -> dict[str, Any]:
 
 def fresh_state() -> dict[str, Any]:
     return {"asked": [], "answered": [], "skipped": [], "said": [], "pending": [],
-            "current": "", "turns": 0, "finished": False}
+            "current": "", "last_q": "", "turns": 0, "finished": False}
 
 
 SINGLE = {"custody", "style", "theme", "accent"}
@@ -663,7 +675,7 @@ def respond(message: str, spec: dict, state: dict) -> dict:
                 state[key].remove(reopen)
         state["current"] = reopen
         state["finished"] = False
-        return _out(["Back to it then.", _question(topic, spec)],
+        return _out(["Back to it then.", _question(topic, spec, state)],
                     _chips_for(topic, spec, []), spec, state)
 
     lines: list[str] = []
@@ -677,12 +689,12 @@ def respond(message: str, spec: dict, state: dict) -> dict:
     if GREET.match(msg) and not msg.lower().startswith("ok "):
         if current:
             state["current"] = current["key"]
-            return _out(["Hello. Let us build something.", _question(current, spec)],
+            return _out(["Hello. Let us build something.", _question(current, spec, state)],
                         _chips_for(current, spec, []), spec, state)
 
     # a whole persona in one line
     preset = detect_preset(low) if _preset_allowed(low, state) else None
-    if preset and not NEG.search(low):
+    if preset:
         p = PRESETS[preset]
         added = 0
         for key, val in p["spec"].items():
@@ -806,16 +818,18 @@ def respond(message: str, spec: dict, state: dict) -> dict:
         lines.append(_join([label(o) for o in already]) + " already in there.")
 
     # one relevant piece of advice
+    insight_for = ""
     for oid in changed_on:
         if oid in INSIGHTS and oid not in state["said"]:
             lines.append(INSIGHTS[oid])
             state["said"].append(oid)
+            insight_for = oid
             break
 
     # a suggested pairing
     pending: list[str] = list(question_offer)
     if not pending and not asked_question and not finishing:
-        sug = _suggest(spec, state)
+        sug = _suggest(spec, state, skip_trigger=insight_for)
         if sug:
             pending = sug["ids"]
             lines.append(sug["text"])
@@ -843,7 +857,7 @@ def respond(message: str, spec: dict, state: dict) -> dict:
         state["current"] = nxt["key"]
         if nxt["key"] not in state["asked"]:
             state["asked"].append(nxt["key"])
-        lines.append(_question(nxt, spec))
+        lines.append(_question(nxt, spec, state))
         return _out(lines, _chips_for(nxt, spec, pending), spec, state)
 
     state["current"] = ""
@@ -858,11 +872,23 @@ def respond(message: str, spec: dict, state: dict) -> dict:
                 spec, state, done=True)
 
 
-def _question(topic: dict, spec: dict) -> str:
+NOUN = {"name": "the name", "purpose": "who it is for", "assets": "coins", "networks": "networks",
+        "custody": "custody", "security": "security", "features": "features", "features2": "features",
+        "platforms": "platforms", "privacy": "privacy", "style": "the look"}
+
+
+def _question(topic: dict, spec: dict, state: dict | None = None) -> str:
     val = spec.get(topic["field"])
-    if val and topic.get("q2"):
-        return topic["q2"](spec)
-    return topic["q"]
+    q = topic["q2"](spec) if (val and topic.get("q2")) else topic["q"]
+    if state is not None:
+        if state.get("last_q") == q:
+            q = random.choice([
+                f"Still on {NOUN.get(topic['key'], 'that')}: anything to add?",
+                f"Anything more on {NOUN.get(topic['key'], 'that')}, or shall we move on?",
+                f"Your call on {NOUN.get(topic['key'], 'that')}. Add something, or say skip.",
+            ])
+        state["last_q"] = q
+    return q
 
 
 def _chips_for(topic: dict, spec: dict, pending: list[str]) -> list[dict]:
@@ -988,9 +1014,11 @@ PAIRS = [
 ]
 
 
-def _suggest(spec: dict, state: dict) -> dict | None:
+def _suggest(spec: dict, state: dict, skip_trigger: str = "") -> dict | None:
     said = set(state.get("said", []))
     for triggers, adds, text in PAIRS:
+        if skip_trigger and skip_trigger in triggers:
+            continue          # the insight just covered this ground
         if not any(_has(spec, t) for t in triggers):
             continue
         missing = [a for a in adds if not _has(spec, a) and a not in said]
