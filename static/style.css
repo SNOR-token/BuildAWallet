@@ -561,3 +561,44 @@ a { color: var(--brand); }
   .bp-actions { margin-left: 0; }
   .vitems { grid-template-columns: 1fr; }
 }
+
+/* ------------------------------------------------------ a11y and no-js --- */
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+.noscript {
+  max-width: 620px; margin: 12vh auto; padding: 0 24px; position: relative; z-index: 2;
+}
+.noscript h2 { font-size: 28px; letter-spacing: -0.03em; margin: 0 0 12px; }
+.noscript p { color: var(--ink-2); }
+
+/* -------------------------------------------------- jump to the build --- */
+.jump {
+  display: none;
+  border: 1px solid var(--line-2);
+  background: var(--panel-2);
+  border-radius: 999px;
+  padding: 9px 16px;
+  margin: 0 20px 12px;
+  font-size: 13px;
+  font-weight: 550;
+  align-self: flex-start;
+}
+.jump b { color: var(--brand); }
+
+@media (max-width: 960px) {
+  .jump:not([hidden]) { display: block; }
+}
+
+/* ---------------------------------------------------------------- print --- */
+@media print {
+  body { background: #fff; color: #111; overflow: visible; }
+  body::before, .pane-chat, .tabs, .toast, .bp-actions, .share, .jump { display: none !important; }
+  .app { display: block; height: auto; }
+  .view { overflow: visible; padding: 0; }
+  .bp-title, .stat b, .bubble strong, .note b { color: #000; }
+  .bp-sub, .note, .stat span { color: #333; }
+  .stat, .bp-item { background: #fff; border-color: #bbb; }
+  .notes, .note { border-color: #ddd; }
+}

@@ -279,6 +279,13 @@ NAME_IDEAS = ["Northvault", "Keyring", "Tidepool", "Marlin", "Sable", "Basecamp"
               "Hearth", "Lumen", "Anchor", "Foxglove", "Quarry", "Beacon", "Salt", "Harbor"]
 
 
+AUDIENCE_WORDS = re.compile(
+    r"\b(people|person|users?|friends?|famil(y|ies)|folks?|traders?|holders?|investors?|beginners?|"
+    r"newcomers?|kids?|teens?|teenagers?|parents?|company|companies|team|business(es)?|startup|dao|"
+    r"community|anyone|someone|everyone|myself|me|my|we|us|our|students?|workers?|migrants?|"
+    r"freelancers?|customers?|clients?|shop|shops|merchants?|players?|gamers?|creators?|artists?|"
+    r"grandma|mum|mom|dad|nan|colleagues?|staff|employees?)\b")
+
 PRESET_CUE = re.compile(r"\b(it'?s for|its for|this is for|for |aimed at|built for|audience|users? are|meant for|i am a|i'?m a|we are a|we'?re a)\b")
 
 
@@ -575,6 +582,28 @@ def progress(spec: dict, state: dict) -> int:
 NAME_RE = re.compile(r"\b(?:call it|name it|named|call the wallet|it'?s called|the name is|name:|rename it to|rename to)\s+(.{2,32})", re.I)
 GREET = re.compile(r"^(hi|hey|hello|yo|hiya|howdy|sup|good (morning|afternoon|evening)|hey there|start|begin|let'?s go|ok)\b[\s!.,]*$", re.I)
 RESET = re.compile(r"\b(start over|reset|clear everything|wipe it|from scratch|start again)\b", re.I)
+REOPEN = [
+    (re.compile(r"\b(look|style|theme|colour|color|design|appearance|restyle|dark mode|light mode)\b"), "style"),
+    (re.compile(r"\b(custody|keys|key model|seed|who holds)\b"), "custody"),
+    (re.compile(r"\b(security|protection|safety|secure)\b"), "security"),
+    (re.compile(r"\b(coins?|tokens?|assets?)\b"), "assets"),
+    (re.compile(r"\b(networks?|chains?)\b"), "networks"),
+    (re.compile(r"\b(platforms?|devices?|where it runs)\b"), "platforms"),
+    (re.compile(r"\b(privacy|private)\b"), "privacy"),
+    (re.compile(r"\b(features?|what it does)\b"), "features2"),
+    (re.compile(r"\b(name|call(ed)? it)\b"), "name"),
+    (re.compile(r"\b(audience|who it is for|who is it for|purpose)\b"), "purpose"),
+]
+REOPEN_CUE = re.compile(r"\b(change|revisit|redo|rethink|different|another|back to|edit|swap out|go back|update|pick a)\b")
+
+
+def detect_reopen(text: str) -> str | None:
+    if not REOPEN_CUE.search(text):
+        return None
+    for pat, key in REOPEN:
+        if pat.search(text):
+            return key
+    return None
 NOT_A_NAME = {"yes", "no", "maybe", "idk", "dunno", "thanks", "thank you", "cool", "nice", "help",
               "wallet", "crypto", "a wallet", "test", "asdf", "none", "whatever"}
 
@@ -625,6 +654,17 @@ def respond(message: str, spec: dict, state: dict) -> dict:
         out = opening()
         out["reply"] = "Cleared. Blank slate.\n\n" + out["reply"].split("\n\n", 1)[1]
         return out
+
+    reopen = detect_reopen(low)
+    if reopen and not match_options(low)[0]:
+        topic = TOPIC_BY_KEY[reopen]
+        for key in ("answered", "skipped"):
+            if reopen in state[key]:
+                state[key].remove(reopen)
+        state["current"] = reopen
+        state["finished"] = False
+        return _out(["Back to it then.", _question(topic, spec)],
+                    _chips_for(topic, spec, []), spec, state)
 
     lines: list[str] = []
     changed_on: list[str] = []
@@ -737,7 +777,10 @@ def respond(message: str, spec: dict, state: dict) -> dict:
             spec["name"] = nm
             lines.append(f"Renamed to **{nm}**.")
 
-    if current and current["key"] == "purpose" and not handled and not preset and not QUESTION.match(low):
+    stated_audience = ((bool(PRESET_CUE.search(low)) or bool(AUDIENCE_WORDS.search(low)))
+                       and len(msg.split()) >= 3)
+    if (current and current["key"] == "purpose" and not handled and not preset
+            and not QUESTION.match(low) and (stated_audience or not (wanted or refused))):
         if len(msg.split()) >= 2:
             spec["purpose"] = _clean_purpose(msg)
             if "purpose" not in state["answered"]:
@@ -786,7 +829,9 @@ def respond(message: str, spec: dict, state: dict) -> dict:
         lines.append(_confused(msg, current))
 
     if current and not asked_question and (changed_on or changed_off or already or preset or handled):
-        _close(state, current["key"])
+        # a name or an audience is only settled once it actually exists
+        if current["key"] not in ("name", "purpose") or spec.get(current["field"]):
+            _close(state, current["key"])
 
     # finish, either by request or by running out of questions
     if finishing:
@@ -852,7 +897,13 @@ def _next_best(spec: dict, n: int = 4) -> list[str]:
 
 
 def _clean_purpose(s: str) -> str:
-    s = re.sub(r"^(it'?s |its |it is |for |this is |mainly )", "", s.strip(), flags=re.I)
+    s = s.strip()
+    for _ in range(3):
+        new = re.sub(r"^(it'?s |its |it is |for |this is |mainly |aimed at |built for |meant for )",
+                     "", s, flags=re.I)
+        if new == s:
+            break
+        s = new
     return s[:140].strip(" .")
 
 

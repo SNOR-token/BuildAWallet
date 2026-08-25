@@ -10,9 +10,19 @@
 <meta property="og:description" content="Describe the crypto wallet you want. Watch it build itself, screen by screen.">
 <meta property="og:type" content="website">
 <link rel="icon" href="/static/favicon.svg?v=1" type="image/svg+xml">
-<link rel="stylesheet" href="/static/style.css?v=2">
+<link rel="stylesheet" href="/static/style.css?v=5">
 </head>
 <body>
+<h1 class="sr-only">Build-a-Wallet: design your own crypto wallet by describing it</h1>
+<noscript>
+  <div class="noscript">
+    <h2>Build-a-Wallet</h2>
+    <p>Describe the crypto wallet you want and this page assembles it in front of you: which coins it
+    holds, who holds the keys, what protects it, what it can do, where it runs and how it looks.
+    150 options, no code, and a shareable blueprint at the end.</p>
+    <p>The builder needs JavaScript. Switch it on and reload to start.</p>
+  </div>
+</noscript>
 <div class="app">
 
   <section class="pane pane-chat">
@@ -31,9 +41,11 @@
     <div class="chat" id="chat" aria-live="polite"></div>
     <div class="chips" id="chips"></div>
 
+    <button class="jump" id="jump" hidden>See the build</button>
+
     <div class="composer">
       <form id="form">
-        <textarea id="input" rows="1" placeholder="Tell me what this wallet should do..." autocomplete="off"></textarea>
+        <textarea id="input" rows="1" placeholder="Tell me what this wallet should do..." autocomplete="off" aria-label="Tell the wallet architect what you want"></textarea>
         <button class="send" id="sendBtn" type="submit">Send</button>
       </form>
       <div class="hint">Try: <em>bitcoin and stablecoins, no seed phrase, face ID, swap and staking</em></div>
@@ -53,6 +65,6 @@
 
 </div>
 <div class="toast" id="toast"></div>
-<script src="/static/app.js?v=2"></script>
+<script src="/static/app.js?v=5"></script>
 </body>
 </html>

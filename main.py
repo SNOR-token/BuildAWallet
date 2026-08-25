@@ -84,8 +84,8 @@ def clean_spec(raw: dict | None) -> dict:
     for f in LIST_FIELDS:
         vals = raw.get(f)
         if isinstance(vals, list):
-            spec[f] = [v for v in dict.fromkeys(vals)
-                       if isinstance(v, str) and GROUP_OF.get(v) == f][:200]
+            strs = [v for v in vals if isinstance(v, str)]
+            spec[f] = [v for v in dict.fromkeys(strs) if GROUP_OF.get(v) == f][:200]
     for f in SINGLE_FIELDS:
         v = raw.get(f)
         if isinstance(v, str) and GROUP_OF.get(v) == f:

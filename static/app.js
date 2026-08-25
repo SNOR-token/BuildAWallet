@@ -4,7 +4,7 @@
 
   var $ = function (s) { return document.querySelector(s); };
   var SPEC = null, STATE = null, CAT = null, META = {};
-  var view = "preview", screenTab = "home", busy = false, saved = null, filter = "";
+  var view = "preview", screenTab = "home", busy = false, saved = null, filter = "", shownDone = false;
 
   /* ------------------------------------------------------------ helpers */
   function esc(s) {
@@ -50,6 +50,22 @@
     clearTimeout(t._t); t._t = setTimeout(function () { t.classList.remove("on"); }, 2200);
   }
   function delay(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+
+  var DRAFT_KEY = "baw.draft.v1";
+
+  function saveDraft() {
+    try {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify({ spec: SPEC, state: STATE, at: Date.now() }));
+    } catch (e) { /* private mode, no draft, no problem */ }
+  }
+  function readDraft() {
+    try {
+      var d = JSON.parse(localStorage.getItem(DRAFT_KEY) || "null");
+      if (!d || !d.spec) return null;
+      if (Date.now() - (d.at || 0) > 1000 * 60 * 60 * 24 * 30) return null;
+      return d;
+    } catch (e) { return null; }
+  }
 
   var SINGLE = { custody: 1, style: 1, theme: 1, accent: 1 };
   var GROUP_OF = {};
@@ -118,8 +134,33 @@
     });
   }
 
+  function setView(name) {
+    view = name;
+    Array.prototype.forEach.call(document.querySelectorAll(".tab"), function (x) {
+      x.classList.toggle("on", x.getAttribute("data-view") === name);
+    });
+    render();
+    if (window.innerWidth <= 960) {
+      document.querySelector(".pane-build").scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }
+
+  var VIEW_CMD = [
+    [/\b(blueprint|the spec|full spec|summary)\b/i, "blueprint", "Blueprint open on the right."],
+    [/\b(vault|all the options|every option|option list|browse options)\b/i, "vault", "Vault open. Tap anything to add or remove it."],
+    [/\b(preview|the phone|the wallet screen|show me the wallet)\b/i, "preview", "Preview open. Tap the tabs inside the phone."]
+  ];
+
   async function send(text) {
     if (busy || !text || !text.trim()) return;
+    for (var i = 0; i < VIEW_CMD.length; i++) {
+      if (VIEW_CMD[i][0].test(text) && text.trim().split(/\s+/).length <= 6) {
+        push("me", text);
+        setView(VIEW_CMD[i][1]);
+        push("sys", VIEW_CMD[i][2]);
+        return;
+      }
+    }
     busy = true;
     $("#sendBtn").disabled = true;
     push("me", text);
@@ -144,7 +185,12 @@
     renderChips(r.chips);
     setMeters(r.progress, r.count);
     saved = null;
-    render();
+    if (r.done && !shownDone) {
+      shownDone = true;
+      setView("blueprint");
+    } else {
+      render();
+    }
     busy = false;
     $("#sendBtn").disabled = false;
   }
@@ -251,6 +297,9 @@
     if (acts.length < 4 && has("f_stake")) acts.push({ l: "Stake", i: "stake" });
     if (acts.length < 4 && has("f_card")) acts.push({ l: "Card", i: "card" });
     if (acts.length < 4 && has("f_qr")) acts.push({ l: "Scan", i: "scan" });
+    if (acts.length < 4 && has("f_history")) acts.push({ l: "Activity", i: "chart" });
+    if (acts.length < 3) acts.push({ l: "Activity", i: "chart" });
+    if (acts.length < 3) acts.push({ l: "Settings", i: "gear" });
     return '<div class="w-acts">' + acts.slice(0, 4).map(function (a) {
       return '<div class="w-act' + (a.p ? " primary" : "") + '">' + icon(a.i, 15) + esc(a.l) + "</div>";
     }).join("") + "</div>";
@@ -570,6 +619,15 @@
       return a + (SPEC[k] || []).length;
     }, 0) + (SPEC.custody ? 1 : 0) + (SPEC.style ? 1 : 0) + 2;
     $("#chosen").textContent = count;
+
+    var jump = $("#jump");
+    if (count > 2) {
+      jump.hidden = false;
+      jump.innerHTML = "See the build: <b>" + esc(SPEC.name || "your wallet") + "</b>, " + count + " choices";
+    } else {
+      jump.hidden = true;
+    }
+    saveDraft();
   }
 
   /* --------------------------------------------------------------- save */
@@ -636,7 +694,21 @@
     var start = await fetch("/api/start").then(function (r) { return r.json(); });
     SPEC = start.spec; STATE = start.state;
 
+    var draft = readDraft();
     var m = location.pathname.match(/^\/w\/([a-z0-9]{4,12})$/i);
+    if (draft && !m) {
+      SPEC = draft.spec; STATE = draft.state || STATE;
+      push("ai", start.reply);
+      push("sys", "Your last build was still here, so I picked it up: **" + (SPEC.name || "untitled") + "**. " +
+        "Carry on, or say start over for a blank one.");
+      renderChips([{ label: "Carry on", send: "what else could I add?" },
+        { label: "Show the blueprint", send: "show me the blueprint" },
+        { label: "Start over", send: "start over" }]);
+      setMeters(90, 0);
+      render();
+      loadStats();
+      return;
+    }
     if (m) {
       try {
         var wl = await fetch("/api/wallet/" + m[1]).then(function (r) { return r.ok ? r.json() : null; });
@@ -683,6 +755,9 @@
   $("#input").addEventListener("keydown", function (e) {
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); $("#form").dispatchEvent(new Event("submit")); }
   });
+  $("#jump").onclick = function () {
+    document.querySelector(".pane-build").scrollIntoView({ behavior: "smooth", block: "start" });
+  };
   Array.prototype.forEach.call(document.querySelectorAll(".tab"), function (t) {
     t.onclick = function () {
       view = t.getAttribute("data-view");
