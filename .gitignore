@@ -2,3 +2,9 @@
 .pwb/
 __pycache__/
 *.pyc
+.idea/
+.gradle/
+build/
+*.iml
+.seeio/
+!AGENTS.md

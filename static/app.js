@@ -181,7 +181,7 @@
         body: JSON.stringify({ message: text, spec: SPEC, state: STATE })
       }).then(function (res) { return res.json(); });
     } catch (e) {
-      typing(false); push("ai", "The connection dropped there. Say that again?");
+      typing(false); push("ai", "The connection dropped. Say that again?");
       busy = false; $("#sendBtn").disabled = false; return;
     }
     var wait = 320 + Math.min(620, (r.reply || "").length * 3) - (Date.now() - started);
@@ -259,11 +259,12 @@
   function renderPhone() {
     var mode = SPEC.theme === "t_light" ? "light" : "dark";
     var style = SPEC.style || "st_minimal";
+    var isGlasses = has("p_glasses");
     var tabs = activeTabs();
     if (!tabs.some(function (t) { return t.id === screenTab; })) screenTab = "home";
     var body = screen(screenTab);
     var html =
-      '<div class="phone"><div class="screen ' + mode + " " + style + '" style="--w-accent:' + accentHex() + '">' +
+      '<div class="phone' + (isGlasses ? " is_glasses" : "") + '"><div class="screen ' + mode + " " + style + '" style="--w-accent:' + accentHex() + '">' +
         '<div class="w-status"><span>9:41</span><span>' + (SPEC.name ? esc(SPEC.name.slice(0, 14)) : "") + "</span><span>100%</span></div>" +
         '<div class="w-body"><div class="w-scroll">' + body + "</div></div>" +
         '<div class="w-tabs">' + tabs.map(function (t) {
@@ -530,6 +531,14 @@
       stat(w.points, "build weight") +
       "</div>" +
 
+      '<div class="share" id="saveOptions" style="display:' + (saved ? "none" : "block") + ';margin-bottom:20px">' +
+      '<h3 style="font-size:12px;text-transform:uppercase;letter-spacing:.09em;color:var(--ink-3);margin:0 0 10px">Publishing options</h3>' +
+      '<div style="display:flex;flex-direction:column;gap:10px">' +
+      '<label style="display:flex;align-items:center;gap:8px;font-size:13px"><input type="checkbox" id="isPublic"> Show this build in the public gallery</label>' +
+      '<div style="display:flex;gap:8px;align-items:center"><input class="search" id="leadEmail" placeholder="Email address (optional)" style="flex:1;font-size:13px">' +
+      '<span style="font-size:11px;color:var(--ink-3);width:120px">Send me the blueprint</span></div>' +
+      '</div></div>' +
+
       groups.map(function (g) {
         return '<div class="bp-group"><h3>' + esc(g.title) + " <em>" + g.ids.length + "</em></h3>" +
           (g.ids.length ? '<div class="bp-items">' + g.ids.map(function (id) {
@@ -577,6 +586,28 @@
       (body || '<div class="bp-none">Nothing matches that.</div>');
   }
 
+  async function renderGallery() {
+    var v = $("#view");
+    v.innerHTML = '<div class="vault-head"><h2>Public Gallery</h2><div class="head-spacer"></div><button class="btn" id="refreshGallery">Refresh</button></div>' +
+      '<div class="vitems" id="galleryItems"><div class="bp-none">Loading gallery...</div></div>';
+    $("#refreshGallery").onclick = renderGallery;
+
+    try {
+      var r = await fetch("/api/gallery").then(function (res) { return res.json(); });
+      var box = $("#galleryItems");
+      if (!r.items || !r.items.length) {
+        box.innerHTML = '<div class="bp-none">The gallery is empty. Be the first to publish a build!</div>';
+        return;
+      }
+      box.innerHTML = r.items.map(function (it) {
+        return '<button class="vitem" onclick="location.href=\'/w/' + esc(it.code) + '\'"><b>' + esc(it.name) + "</b>" +
+          "<span>" + it.count + " options chosen • " + esc(it.code) + "</span></button>";
+      }).join("");
+    } catch (e) {
+      $("#galleryItems").innerHTML = '<div class="bp-none">Could not load the gallery.</div>';
+    }
+  }
+
   function toggle(id) {
     var g = GROUP_OF[id];
     if (!g) return;
@@ -615,6 +646,8 @@
       $("#jsonBtn").onclick = downloadSpec;
       $("#printBtn").onclick = function () { window.print(); };
       if (saved) showShare(saved);
+    } else if (view === "gallery") {
+      renderGallery();
     } else {
       v.innerHTML = renderVault();
       var s = $("#vsearch");
@@ -646,13 +679,20 @@
   /* --------------------------------------------------------------- save */
   async function saveBuild() {
     var btn = $("#saveBtn");
+    var email = $("#leadEmail") ? $("#leadEmail").value : "";
+    var isPub = $("#isPublic") ? $("#isPublic").checked : false;
+
     btn.disabled = true; btn.textContent = "Saving...";
     try {
       var r = await fetch("/api/save", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ spec: SPEC })
+        body: JSON.stringify({ spec: SPEC, email: email, is_public: isPub })
       }).then(function (res) { return res.json(); });
-      if (r.code) { saved = r.code; showShare(r.code); loadStats(); toast("Saved"); }
+      if (r.code) {
+        saved = r.code;
+        if ($("#saveOptions")) $("#saveOptions").style.display = "none";
+        showShare(r.code); loadStats(); toast("Saved");
+      }
       else toast(r.detail || "Could not save that");
     } catch (e) { toast("Could not save that"); }
     btn.disabled = false; btn.textContent = "Save and get a link";

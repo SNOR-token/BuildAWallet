@@ -147,6 +147,8 @@ INSIGHTS = {
     "f_business": "Business users want roles and an audit trail more than they want charts.",
     "f_remit": "Remittance users judge the product on the last mile: local cash out. Pick the corridor before the chain.",
     "f_gas": "Sponsored gas needs a smart account to work, so those two travel together.",
+    "p_glasses": "Smart glasses need a glanceable UI. Glimmer's additive display means black is transparent, so the wallet floats in the user's field of view.",
+    "st_glimmer": "The Glimmer style uses high contrast and depth to stay readable against the real world. It turns the wallet into a spatial experience.",
 }
 
 
@@ -273,6 +275,21 @@ PRESETS = {
             "platforms": ["p_ios", "p_android", "p_ext", "p_tg"],
             "privacy": [],
             "style": "st_neon", "theme": "t_dark", "accent": "a_pink",
+        },
+    },
+    "visionary": {
+        "kw": ["glasses", "smart glasses", "xr", "ar", "spatial", "future", "visionary", "glimmer"],
+        "name": "Vision",
+        "purpose": "Early adopters using display glasses and spatial interfaces",
+        "spec": {
+            "assets": ["eth", "sol", "usdc", "nft_asset"],
+            "networks": ["n_base", "n_poly"],
+            "custody": "c_mpc",
+            "security": ["s_bio", "s_passkey", "s_sim", "s_scam"],
+            "features": ["f_send", "f_swap", "f_portfolio", "f_qr", "f_names", "f_ai", "f_voice"],
+            "platforms": ["p_ios", "p_glasses"],
+            "privacy": ["v_noanalytics"],
+            "style": "st_glimmer", "theme": "t_dark", "accent": "a_cyan",
         },
     },
 }

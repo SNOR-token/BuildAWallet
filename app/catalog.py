@@ -316,6 +316,8 @@ PLATFORMS = [
         "Zero install distribution inside a chat, huge for TON and referrals."),
     opt("p_watch", "Watch app", ["watch", "apple watch", "wearable"],
         "Balance glance and payment confirmation on the wrist."),
+    opt("p_glasses", "Display glasses", ["glasses", "smart glasses", "ar", "xr", "vision", "glimmer"],
+        "Projected interface for smart glasses using the Glimmer toolkit."),
     opt("p_hw", "Your own hardware device", ["own hardware", "build hardware", "signing device", "make a device"],
         "A dedicated signer you ship yourself. Serious project, serious moat."),
     opt("p_api", "Developer API and SDK", ["api", "sdk", "developers", "embed", "white label"],
@@ -357,6 +359,8 @@ STYLES = [
         "Soft blurred panels over colour."),
     opt("st_brutal", "Bold and blocky", ["brutalist", "bold", "blocky", "chunky", "retro"],
         "Thick borders, hard shadows, unmistakable."),
+    opt("st_glimmer", "Glimmer (XR optimized)", ["glimmer", "glasses", "xr", "display glasses", "spatial"],
+        "Projected UI for smart glasses. High contrast, floating panels, spatial layout."),
     opt("st_play", "Playful", ["playful", "fun", "friendly", "cute", "rounded"],
         "Rounded shapes and warm colour, aimed at first timers."),
 ]

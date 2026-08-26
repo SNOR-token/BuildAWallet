@@ -46,9 +46,18 @@ def init_db() -> None:
             "  code TEXT PRIMARY KEY,"
             "  name TEXT NOT NULL,"
             "  spec TEXT NOT NULL,"
+            "  email TEXT,"
+            "  is_public INTEGER NOT NULL DEFAULT 0,"
             "  created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP"
             ")"
         )
+        # Migration: add columns if they don't exist
+        cursor = conn.execute("PRAGMA table_info(wallets)")
+        cols = {row["name"] for row in cursor.fetchall()}
+        if "email" not in cols:
+            conn.execute("ALTER TABLE wallets ADD COLUMN email TEXT")
+        if "is_public" not in cols:
+            conn.execute("ALTER TABLE wallets ADD COLUMN is_public INTEGER NOT NULL DEFAULT 0")
         conn.execute(
             "CREATE TABLE IF NOT EXISTS events ("
             "  id INTEGER PRIMARY KEY AUTOINCREMENT,"
@@ -125,6 +134,8 @@ class ChatIn(BaseModel):
 
 class SaveIn(BaseModel):
     spec: dict | None = None
+    email: str | None = Field(default=None, max_length=120)
+    is_public: bool = False
 
 
 # ------------------------------------------------------------------ routes --
@@ -181,12 +192,31 @@ def save(body: SaveIn) -> dict:
     if brain.filled_count(spec) < 1:
         raise HTTPException(status_code=400, detail="nothing to save yet")
     name = spec["name"] or "Untitled wallet"
+    email = (body.email or "").strip().lower()[:120]
+    is_public = 1 if body.is_public else 0
     with db() as conn:
         code = new_code(conn)
-        conn.execute("INSERT INTO wallets (code, name, spec) VALUES (?, ?, ?)",
-                     (code, name, json.dumps(spec)))
+        conn.execute("INSERT INTO wallets (code, name, spec, email, is_public) VALUES (?, ?, ?, ?, ?)",
+                     (code, name, json.dumps(spec), email, is_public))
         conn.execute("INSERT INTO events (kind) VALUES ('save')")
     return {"code": code, "url": f"/w/{code}"}
+
+
+@app.get("/api/gallery")
+def gallery() -> dict:
+    with db() as conn:
+        rows = conn.execute(
+            "SELECT name, code, spec FROM wallets WHERE is_public = 1 "
+            "ORDER BY created_at DESC LIMIT 24").fetchall()
+    items = []
+    for r in rows:
+        spec = json.loads(r["spec"])
+        items.append({
+            "name": r["name"],
+            "code": r["code"],
+            "count": brain.filled_count(spec)
+        })
+    return {"items": items}
 
 
 @app.get("/api/wallet/{code}")
