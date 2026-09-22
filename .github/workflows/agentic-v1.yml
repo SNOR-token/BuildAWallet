@@ -12,5 +12,5 @@ jobs:
         with:
           python-version: '3.12'
       - run: pip install -r requirements.txt
-      - run: python -m py_compile main.py agent_protocol.py app/brain.py app/catalog.py
+      - run: python -m py_compile main.py agent_protocol.py chains.py evm.py app/brain.py app/catalog.py
       - run: pytest -q
