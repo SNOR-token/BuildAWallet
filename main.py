@@ -12,7 +12,7 @@ import brain
 from catalog import ACCENTS,BY_ID,GROUPS,THEMES,TOTAL_OPTIONS
 from agent_protocol import router as agent_router, init_agent_db
 from chains import CHAINS
-DATA_DIR=Path(os.environ.get("DATA_DIR",str(Path.home()/".build-a-wallet"))); DB_PATH=DATA_DIR/"app.db"; STATIC=Path(__file__).parent/"static"; CODE_CHARS="abcdefghjkmnpqrstuvwxyz23456789"
+DATA_DIR=Path(os.environ.get("DATA_DIR",str(Path.home()/".build-a-wallet"))); DB_PATH=DATA_DIR/"app.db"; STATIC=Path(__file__).parent/"static"; CODE_CHARS="abcdefghjkmnpqrstuvwxyz23456789"; VERSION="1.0.0-alpha.6"
 def db(): c=sqlite3.connect(DB_PATH); c.row_factory=sqlite3.Row; return c
 def init_db():
  DATA_DIR.mkdir(parents=True,exist_ok=True)
@@ -24,7 +24,7 @@ def init_db():
  init_agent_db()
 @asynccontextmanager
 async def lifespan(app:FastAPI): init_db(); yield
-app=FastAPI(title="Build-a-Wallet",version="1.0.0-alpha.4",lifespan=lifespan,docs_url="/docs/api",redoc_url=None,openapi_url="/openapi.json"); app.include_router(agent_router)
+app=FastAPI(title="Build-a-Wallet",version=VERSION,lifespan=lifespan,docs_url="/docs/api",redoc_url=None,openapi_url="/openapi.json"); app.include_router(agent_router)
 LIST_FIELDS=("assets","networks","security","features","platforms","privacy"); SINGLE_FIELDS={"custody":"custody","style":"style","theme":"theme","accent":"accent"}; GROUP_OF=brain.GROUP_OF
 def clean_spec(raw):
  s=brain.blank_spec()
@@ -49,7 +49,7 @@ def clean_state(raw):
 class ChatIn(BaseModel): message:str=Field(default="",max_length=600);spec:dict|None=None;state:dict|None=None
 class SaveIn(BaseModel): spec:dict|None=None;email:str|None=Field(default=None,max_length=120);is_public:bool=False
 @app.get("/healthz")
-def healthz():return {"ok":True,"agent_protocol":"1.0.0-alpha.4","network":"mainnet"}
+def healthz():return {"ok":True,"agent_protocol":VERSION,"network":"mainnet","broadcast_enabled":os.environ.get("BAW_MAINNET_BROADCAST")=="I_UNDERSTAND_MAINNET"}
 @app.get("/api/start")
 def start():return brain.opening()
 @app.post("/api/chat")
@@ -81,11 +81,11 @@ def stats():
  with db() as c:n=c.execute("SELECT COUNT(*) FROM wallets").fetchone()[0];r=c.execute("SELECT name,code FROM wallets ORDER BY rowid DESC LIMIT 8").fetchall()
  return {"built":int(n),"options":TOTAL_OPTIONS,"recent":[{"name":x["name"],"code":x["code"]} for x in r]}
 @app.get("/.well-known/agent.json")
-def manifest():return {"name":"Build-a-Wallet","description":"Policy-controlled wallet infrastructure for autonomous agents.","protocol":"Build-a-Wallet Agent Protocol","version":"1.0.0-alpha.4","network":"mainnet","openapi":"/openapi.json","api_base":"/v1","capabilities":"/v1/capabilities","authentication":"Bearer","chains":list(CHAINS.keys())}
+def manifest():return {"name":"Build-a-Wallet","description":"Policy-controlled wallet infrastructure for autonomous agents.","protocol":"Build-a-Wallet Agent Protocol","version":VERSION,"openapi":"/openapi.json","api_base":"/v1","capabilities":"/v1/capabilities","authentication":"Bearer","network":"mainnet","chains":list(CHAINS),"broadcast_enabled":os.environ.get("BAW_MAINNET_BROADCAST")=="I_UNDERSTAND_MAINNET"}
 @app.get("/llms.txt",response_class=PlainTextResponse)
-def llms():return "# Build-a-Wallet\nWallet infrastructure for autonomous agents.\nMainnet chain registry: /v1/chains\nOpenAPI: /openapi.json\nManifest: /.well-known/agent.json\nCapabilities: /v1/capabilities\nAPI docs: /docs/api\nHumans define policy; agents receive scoped authority.\n"
+def llms():return "# Build-a-Wallet\nWallet infrastructure for the agentic internet.\nHumans set policy; agents transact within scoped authority.\nOpenAPI: /openapi.json\nManifest: /.well-known/agent.json\nCapabilities: /v1/capabilities\nAPI docs: /docs/api\n"
 @app.get("/mcp")
-def mcp():return {"protocol":"MCP discovery","status":"REST/OpenAPI bridge only","rest_mapping":"/v1","openapi":"/openapi.json","note":"A native MCP transport is not yet exposed; use the same scoped Bearer credential and policy boundary through REST."}
+def mcp():return {"protocol":"MCP","status":"metadata-only","rest_mapping":"/v1","openapi":"/openapi.json","note":"Operational MCP transport is not yet enabled; use the REST/OpenAPI interface."}
 @app.get("/")
 def index():return FileResponse(STATIC/"index.html")
 @app.get("/w/{code}")
