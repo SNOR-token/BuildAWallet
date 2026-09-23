@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Build-a-Wallet — HUMAN</title>
+<meta name="description" content="Design a human-controlled crypto wallet with Build-a-Wallet. Choose assets, custody, security, networks, features and interface preferences through a guided builder.">
+<link rel="canonical" href="https://buildawallet.xyz/human">
+<link rel="stylesheet" href="/static/human.css?v=1">
+</head>
+<body>
+<header class="top"><a class="brand" href="/">Build-a-Wallet</a><nav><a href="/">NON-HUMAN</a><a class="on" href="/human">HUMAN</a><a href="/docs">Docs</a><a href="/pricing">Pricing</a></nav></header>
+<main>
+<section class="intro">
+  <div class="eyebrow">HUMAN / USER-CONTROLLED WALLET BUILDER</div>
+  <h1>Build the wallet <span>you</span> want to control.</h1>
+  <p>Design a wallet around your assets, custody model, security preferences, networks, features and visual style. You make the choices; Build-a-Wallet turns them into a shareable wallet blueprint.</p>
+  <div class="actions"><a class="primary" href="#builder">Start building</a><a href="/docs#human-wallets">How it works</a></div>
+</section>
+<section class="steps">
+  <article><b>01</b><h2>Choose what it holds</h2><p>Bitcoin, Litecoin, Ethereum, stablecoins, Solana assets and other supported options.</p></article>
+  <article><b>02</b><h2>Choose who controls it</h2><p>Define custody, backup, authentication, approval and recovery preferences.</p></article>
+  <article><b>03</b><h2>Choose how it behaves</h2><p>Pick swaps, payments, portfolio features, privacy, security and interface preferences.</p></article>
+</section>
+<section class="builderShell" id="builder">
+  <div class="builderHead"><div><span>INTERACTIVE BUILDER</span><h2>Describe your ideal wallet</h2></div><a href="/docs#human-wallets">Builder guide</a></div>
+  <div class="builderGrid">
+    <section class="pane pane-chat">
+      <header class="head"><div class="logo"><div class="logo-mark">W</div><div>Build-a-Wallet<small>human wallet architect</small></div></div><div class="head-spacer"></div><div class="progress-wrap"><div class="progress"><i id="bar"></i></div><span class="pill"><b id="chosen">0</b> / <span id="total">150</span> options</span></div></header>
+      <div class="chat" id="chat" aria-live="polite"><div class="chips" id="chips"></div></div>
+      <button class="jump" id="jump" hidden>See the build</button>
+      <div class="composer"><form id="form"><textarea id="input" rows="1" placeholder="Tell me what your wallet should do..." autocomplete="off"></textarea><button class="send" id="sendBtn" type="submit">Send</button></form><div class="hint">Try: <em>Bitcoin and Litecoin, Face ID, hardware wallet support, simple dark interface</em></div></div>
+    </section>
+    <section class="pane pane-build"><nav class="tabs"><button class="tab on" data-view="preview">Live preview</button><button class="tab" data-view="blueprint">Blueprint</button><button class="tab" data-view="vault">Option vault</button><button class="tab" data-view="gallery">Gallery</button><div class="head-spacer"></div><span class="pill" id="builtPill"></span></nav><div class="view view-preview" id="view"></div></section>
+  </div>
+</section>
+</main>
+<footer><div>© 2026 Build-a-Wallet · Human-controlled wallet design tools and agentic wallet infrastructure.</div><div><a href="/docs">Docs</a><a href="/pricing">Pricing</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a></div></footer>
+<div class="toast" id="toast"></div>
+<script src="/static/app.js?v=8"></script>
+</body>
+</html>
