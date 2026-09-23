@@ -121,6 +121,11 @@ def sitemap():
  return Response(content=body,media_type="application/xml")
 @app.get("/")
 def index():return FileResponse(STATIC/"index.html")
+@app.get("/{asset_name}")
+def root_asset(asset_name:str):
+ if asset_name in {"app.js","human.css","docs.css","style.css","landing.css","favicon.svg","agentic-human-robot-hero.jpg","agentic-human-robot-hero.webp","buildawallet-human-robot.webp","human-robot-center.webp"}:
+  return FileResponse(STATIC/asset_name)
+ raise HTTPException(status_code=404)
 @app.get("/w/{code}")
 def shared(code:str):return FileResponse(STATIC/"human.html")
 @app.exception_handler(404)

@@ -820,5 +820,9 @@
     };
   });
 
-  boot();
+  boot().catch(function () {
+    push("sys", "The wallet builder cannot connect to its service right now. Please try again later.");
+    $("#view").innerHTML = '<div class="empty">The live preview will appear when the builder service is available.</div>';
+    $("#sendBtn").disabled = true;
+  });
 })();
