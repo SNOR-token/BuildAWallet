@@ -16,21 +16,16 @@ uv run pywrangler deploy --dry-run
 
 ## Provision and deploy
 
-A Cloudflare account with an active `buildawallet.xyz` zone is required:
+A Cloudflare account with the active `buildawallet.xyz` zone is required. From the repository root:
 
 ```bash
+cd cloudflare-human
 npx wrangler login
-npx wrangler d1 create buildawallet
+./deploy.sh
 ```
 
-Replace the local-only `database_id` in `wrangler.jsonc` with the UUID printed by `d1 create`. Do not deploy with the placeholder UUID. Then:
+The script creates the `buildawallet` D1 database if needed, applies its migration, packages the Python Worker, deploys the `/api/*` and `/healthz` routes, and checks the public endpoints. It writes the real database ID into an ignored local config file. No local web server is involved.
 
-```bash
-npx wrangler d1 migrations apply buildawallet --remote
-./prepare.sh
-uv run pywrangler deploy
-```
-
-The configured route targets `buildawallet.xyz/api/*` and `/healthz`. Keep the existing Pages custom domain attached for all other paths. The Pages project must use `static` as its build output directory and the repository root as its project root so that `functions/w/[code].js` can serve saved blueprint URLs. Test `/api/start`, `/api/catalog`, `/api/chat`, and D1-backed save/read after deployment.
+Keep the existing Pages custom domain attached for all other paths. The Pages project must use `static` as its build output directory and the repository root as its project root so that `functions/w/[code].js` can serve saved blueprint URLs. Test a chat, save, shared link, gallery, and stats after deployment.
 
 **Security:** Never put `AGENT_BOOTSTRAP_SECRET`, `BAW_MASTER_KEY`, or mainnet broadcast settings in this Worker. The `/v1` agent API is a separate migration and must remain unavailable until its key storage, policy checks, and durable transaction state are verified.
