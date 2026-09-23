@@ -8,9 +8,9 @@ from fastapi import APIRouter,Header,HTTPException
 from pydantic import BaseModel,Field
 from chains import CHAINS,public_registry,health
 from evm import balance as evm_balance,prepare_native,sign_transaction,broadcast_signed,receipt as evm_receipt
-from solana_adapter import generate_keypair as generate_solana_keypair,balance as sol_balance,receipt as sol_receipt
-from utxo_adapter import generate_key as generate_utxo_key,balance as utxo_balance,receipt as utxo_receipt
-from wallet_crypto import generate_evm_key,encrypt_secret,decrypt_private_key
+from solana_adapter import generate_keypair as generate_solana_keypair,balance as sol_balance,receipt as sol_receipt,build_signed_native_transfer as sol_build,broadcast as sol_broadcast,simulate_transaction as sol_simulate
+from utxo_adapter import generate_key as generate_utxo_key,balance as utxo_balance,receipt as utxo_receipt,build_signed_native_transfer as utxo_build,broadcast as utxo_broadcast
+from wallet_crypto import generate_evm_key,encrypt_secret,decrypt_private_key,decrypt_secret
 from pricing import value_usd
 router=APIRouter(prefix="/v1",tags=["Agent Protocol v1"]);DATA_DIR=Path(os.environ.get("DATA_DIR",str(Path.home()/".build-a-wallet")));DB_PATH=DATA_DIR/"app.db"
 def db():c=sqlite3.connect(DB_PATH);c.row_factory=sqlite3.Row;return c
@@ -80,10 +80,8 @@ def create_wallet(b:CreateWalletIn,authorization:str|None=Header(default=None)):
  cfg=CHAINS[b.chain]
  try:
   if cfg["family"]=="evm":address,enc=generate_evm_key()
-  elif cfg["family"]=="solana":
-   address,secret=generate_solana_keypair();enc=encrypt_secret(secret)
-  elif cfg["family"]=="utxo":
-   address,wif=generate_utxo_key(b.chain);enc=encrypt_secret(wif.encode())
+  elif cfg["family"]=="solana":address,secret=generate_solana_keypair();enc=encrypt_secret(secret)
+  elif cfg["family"]=="utxo":address,wif=generate_utxo_key(b.chain);enc=encrypt_secret(wif.encode())
   else:raise RuntimeError("unsupported chain family")
  except Exception as e:raise HTTPException(503,str(e))
  wid=jid("wal_");exp=(now()+timedelta(seconds=b.policy.expires_in_seconds)).isoformat() if b.policy.expires_in_seconds else None;p=b.policy.model_dump();p["allowed_assets"]=p["allowed_assets"] or [cfg["symbol"]]
@@ -95,9 +93,7 @@ def get_wallet(wallet_id:str,authorization:str|None=Header(default=None)):
 @router.get("/wallets/{wallet_id}/balance")
 def get_balance(wallet_id:str,authorization:str|None=Header(default=None)):
  cr=auth(authorization,"wallet:read");w=wallet_for(wallet_id,cr);family=CHAINS[w["chain"]]["family"]
- try:
-  data=evm_balance(w["chain"],w["address"]) if family=="evm" else sol_balance(w["address"]) if family=="solana" else utxo_balance(w["chain"],w["address"])
-  return {"wallet_id":wallet_id,"chain":w["chain"],**data}
+ try:data=evm_balance(w["chain"],w["address"]) if family=="evm" else sol_balance(w["address"]) if family=="solana" else utxo_balance(w["chain"],w["address"]);return {"wallet_id":wallet_id,"chain":w["chain"],**data}
  except Exception as e:raise HTTPException(503,str(e))
 @router.post("/wallets/{wallet_id}/freeze")
 def freeze(wallet_id:str,authorization:str|None=Header(default=None)):
@@ -147,15 +143,22 @@ def execute(tx_id:str,authorization:str|None=Header(default=None)):
   if tx["status"]!="ready_for_signing":raise HTTPException(409,"transaction is not ready for signing")
   w=dict(c.execute("SELECT * FROM agent_wallets WHERE id=?",(tx["wallet_id"],)).fetchone());cfg=CHAINS[w["chain"]]
   if not w or w["status"]!="active":raise HTTPException(403,"wallet is not active")
-  if cfg["family"]!="evm":raise HTTPException(501,"automatic signing execution currently enabled only for EVM native transfers; Solana and UTXO wallets support custody/balance/RPC primitives but signing remains disabled until dedicated transaction builders are audited")
   if tx["asset"].upper()!=cfg["symbol"].upper():raise HTTPException(501,"token execution not enabled in this endpoint")
   c.execute("UPDATE agent_transactions SET status='executing' WHERE id=? AND status='ready_for_signing'",(tx_id,))
-  amount_wei=int(round(float(tx["amount"])*10**18))
-  try:prepared=prepare_native(w["chain"],w["address"],tx["destination"],amount_wei);raw=sign_transaction(prepared["unsigned_transaction"],decrypt_private_key(w["encrypted_key"]));txh=broadcast_signed(w["chain"],raw)
+  try:
+   if cfg["family"]=="evm":
+    prepared=prepare_native(w["chain"],w["address"],tx["destination"],int(round(float(tx["amount"])*10**18)));raw=sign_transaction(prepared["unsigned_transaction"],decrypt_private_key(w["encrypted_key"]));txh=broadcast_signed(w["chain"],raw);meta={"family":"evm","fee_wei":prepared["fee_wei"],"simulation":prepared["simulation"]}
+   elif cfg["family"]=="solana":
+    raw=sol_build(decrypt_secret(w["encrypted_key"]),tx["destination"],int(round(float(tx["amount"])*1_000_000_000)));sim=sol_simulate(raw);err=(sim.get("value") or {}).get("err")
+    if err is not None:raise RuntimeError(f"Solana simulation failed: {err}")
+    txh=sol_broadcast(raw);meta={"family":"solana","simulation":"passed"}
+   elif cfg["family"]=="utxo":
+    built=utxo_build(w["chain"],decrypt_secret(w["encrypted_key"]).decode(),w["address"],tx["destination"],float(tx["amount"]));txh=utxo_broadcast(w["chain"],built["raw_hex"]);meta={"family":"utxo",**{k:v for k,v in built.items() if k!="raw_hex"}}
+   else:raise RuntimeError("unsupported execution family")
   except Exception as e:
-   c.execute("UPDATE agent_transactions SET status='ready_for_signing' WHERE id=? AND status='executing'",(tx_id,));raise HTTPException(503,str(e))
-  c.execute("UPDATE agent_transactions SET status='broadcast',tx_hash=?,execution_json=? WHERE id=?",(txh,json.dumps({"fee_wei":prepared["fee_wei"],"simulation":prepared["simulation"]}),tx_id));audit(c,"transaction.broadcast",{"transaction_id":tx_id,"tx_hash":txh},w["id"],cr["id"])
-  return {"transaction_id":tx_id,"status":"broadcast","chain":w["chain"],"tx_hash":txh}
+   c.execute("UPDATE agent_transactions SET status='ready_for_signing',reason=? WHERE id=?",(f"execution_error:{type(e).__name__}",tx_id));audit(c,"transaction.execution_failed",{"transaction_id":tx_id,"error":str(e)},w["id"],cr["id"]);raise HTTPException(503,str(e))
+  c.execute("UPDATE agent_transactions SET status='broadcast',tx_hash=?,execution_json=?,reason=NULL WHERE id=?",(txh,json.dumps(meta),tx_id));audit(c,"transaction.broadcast",{"transaction_id":tx_id,"tx_hash":txh,"family":cfg["family"]},w["id"],cr["id"])
+  return {"transaction_id":tx_id,"status":"broadcast","chain":w["chain"],"tx_hash":txh,"execution":meta}
 @router.get("/transactions/{tx_id}/receipt")
 def tx_receipt(tx_id:str,authorization:str|None=Header(default=None)):
  cr=auth(authorization,"chain:read")
@@ -166,12 +169,13 @@ def tx_receipt(tx_id:str,authorization:str|None=Header(default=None)):
   w=c.execute("SELECT * FROM agent_wallets WHERE id=?",(tx["wallet_id"],)).fetchone();family=CHAINS[w["chain"]]["family"]
   try:r=evm_receipt(w["chain"],tx["tx_hash"]) if family=="evm" else sol_receipt(tx["tx_hash"]) if family=="solana" else utxo_receipt(w["chain"],tx["tx_hash"])
   except Exception as e:raise HTTPException(503,str(e))
-  if r["status"] in ("confirmed","failed"):c.execute("UPDATE agent_transactions SET status=? WHERE id=?",(r["status"],tx_id));audit(c,"transaction.receipt",r,w["id"],cr["id"])
+  if r["status"] in ("confirmed","failed"):
+   c.execute("UPDATE agent_transactions SET status=? WHERE id=?",(r["status"],tx_id));audit(c,"transaction.receipt",r,w["id"],cr["id"])
   return {"transaction_id":tx_id,"chain":w["chain"],**r}
 @router.get("/audit")
 def audit_log(authorization:str|None=Header(default=None),limit:int=50):
- auth(authorization,"audit:read");limit=max(1,min(limit,200))
+ cr=auth(authorization,"audit:read");limit=max(1,min(limit,200))
  with db() as c:r=c.execute("SELECT * FROM agent_audit ORDER BY id DESC LIMIT ?",(limit,)).fetchall()
  return {"events":[dict(x) for x in r]}
 @router.get("/capabilities")
-def capabilities():return {"protocol":"Build-a-Wallet Agent Protocol","version":"1.0.0-alpha.5","network":"mainnet","chains":list(CHAINS),"custody":{"evm":"encrypted","solana":"encrypted","utxo":"encrypted"},"balances":{"evm":True,"solana":True,"utxo":True},"authoritative_pricing":True,"operator_separation":True,"credential_revocation":True,"wallet_freeze":True,"execution":{"evm_native":"prepare/simulate/sign/broadcast/receipt","solana":"custody/read/receipt primitives; signing disabled pending audit","utxo":"custody/read/fee/broadcast/receipt primitives; signing disabled pending audit"},"broadcast_safety_switch":"BAW_MAINNET_BROADCAST=I_UNDERSTAND_MAINNET"}
+def capabilities():return {"protocol":"Build-a-Wallet Agent Protocol","version":"1.0.0-alpha.6","network":"mainnet","chains":list(CHAINS),"custody":{"evm":"encrypted","solana":"encrypted","utxo":"encrypted"},"balances":{"evm":True,"solana":True,"utxo":True},"authoritative_pricing":True,"operator_separation":True,"credential_revocation":True,"wallet_freeze":True,"execution":{"evm_native":"enabled behind safety switch","sol_native":"enabled behind safety switch with simulation","btc_native":"enabled behind safety switch","ltc_native":"enabled behind safety switch","tokens":"not yet enabled"},"broadcast_safety_switch":"BAW_MAINNET_BROADCAST=I_UNDERSTAND_MAINNET"}
