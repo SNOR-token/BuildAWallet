@@ -1,6 +1,6 @@
 """Build-a-Wallet HTTP layer: human builder + Agent Protocol v1."""
 from __future__ import annotations
-import json, os, random, sqlite3, sys
+import base64, json, os, random, sqlite3, sys
 from contextlib import asynccontextmanager
 from pathlib import Path
 from fastapi import FastAPI, HTTPException
@@ -28,7 +28,7 @@ async def lifespan(app:FastAPI):
  init_db()
  async with mcp.session_manager.run():
   yield
-app=FastAPI(title="Build-a-Wallet",version=VERSION,lifespan=lifespan,docs_url="/docs/api",redoc_url=None,openapi_url="/openapi.json"); app.include_router(agent_router)
+app=FastAPI(title="BuildAWallet.xyz",version=VERSION,lifespan=lifespan,docs_url="/docs/api",redoc_url=None,openapi_url="/openapi.json"); app.include_router(agent_router)
 LIST_FIELDS=("assets","networks","security","features","platforms","privacy"); SINGLE_FIELDS={"custody":"custody","style":"style","theme":"theme","accent":"accent"}; GROUP_OF=brain.GROUP_OF
 def clean_spec(raw):
  s=brain.blank_spec()
@@ -59,7 +59,7 @@ def start():return brain.opening()
 @app.post("/api/chat")
 def chat(b:ChatIn):return brain.respond(b.message,clean_spec(b.spec),clean_state(b.state))
 @app.get("/api/catalog")
-def catalog():return {"groups":[{"key":g["key"],"title":g["title"],"multi":g["multi"],"items":[{"id":i["id"],"label":i["label"],"blurb":i.get("blurb",""),"sym":i.get("sym",""),"color":i.get("color",""),"tab":i.get("tab","")} for i in g["items"]]} for g in GROUPS],"themes":[{"id":t["id"],"label":t["label"],"mode":t["mode"]} for t in THEMES],"accents":[{"id":a["id"],"label":a["label"],"hex":a["hex"]} for a in ACCENTS],"total":TOTAL_OPTIONS,"meta":{i["id"]:{"label":i["label"],"sym":i.get("sym",""),"color":i.get("color","") } for i in BY_ID.values()}}
+def catalog():return {"groups":[{"key":g["key"],"title":g["title"],"multi":g["multi"],"items":[{"id":i["id"],"label":i["label"],"blurb":i.get("blurb",""),"sym":i.get("sym",""),"color":i.get("color","") ,"tab":i.get("tab","")} for i in g["items"]]} for g in GROUPS],"themes":[{"id":t["id"],"label":t["label"],"mode":t["mode"]} for t in THEMES],"accents":[{"id":a["id"],"label":a["label"],"hex":a["hex"]} for a in ACCENTS],"total":TOTAL_OPTIONS,"meta":{i["id"]:{"label":i["label"],"sym":i.get("sym",""),"color":i.get("color","") } for i in BY_ID.values()}}
 def new_code(c):
  for _ in range(60):
   x="".join(random.choice(CODE_CHARS) for _ in range(6))
@@ -85,9 +85,9 @@ def stats():
  with db() as c:n=c.execute("SELECT COUNT(*) FROM wallets").fetchone()[0];r=c.execute("SELECT name,code FROM wallets ORDER BY rowid DESC LIMIT 8").fetchall()
  return {"built":int(n),"options":TOTAL_OPTIONS,"recent":[{"name":x["name"],"code":x["code"]} for x in r]}
 @app.get("/.well-known/agent.json")
-def manifest():return {"name":"Build-a-Wallet","homepage":PUBLIC_BASE_URL,"category":"agentic wallet infrastructure","tagline":"Humans set the rules. Agents transact within them.","description":"Policy-controlled multichain wallet infrastructure for autonomous AI agents.","protocol":"Build-a-Wallet Agent Protocol","version":VERSION,"openapi":f"{PUBLIC_BASE_URL}/openapi.json","api_base":f"{PUBLIC_BASE_URL}/v1","capabilities":f"{PUBLIC_BASE_URL}/v1/capabilities","authentication":"Bearer","network":"mainnet","chains":list(CHAINS),"mcp":f"{PUBLIC_BASE_URL}/mcp","pricing":f"{PUBLIC_BASE_URL}/pricing","offer":f"{PUBLIC_BASE_URL}/agent-offer.json","llms_txt":f"{PUBLIC_BASE_URL}/llms.txt","docs":f"{PUBLIC_BASE_URL}/docs","human":f"{PUBLIC_BASE_URL}/human","privacy":f"{PUBLIC_BASE_URL}/privacy","terms":f"{PUBLIC_BASE_URL}/terms","broadcast_enabled":os.environ.get("BAW_MAINNET_BROADCAST")=="I_UNDERSTAND_MAINNET"}
+def manifest():return {"name":"BuildAWallet.xyz","homepage":PUBLIC_BASE_URL,"category":"agentic wallet infrastructure","tagline":"Humans set the rules. Agents transact within them.","description":"Policy-controlled multichain wallet infrastructure for autonomous AI agents.","protocol":"BuildAWallet Agent Protocol","version":VERSION,"openapi":f"{PUBLIC_BASE_URL}/openapi.json","api_base":f"{PUBLIC_BASE_URL}/v1","capabilities":f"{PUBLIC_BASE_URL}/v1/capabilities","authentication":"Bearer","network":"mainnet","chains":list(CHAINS),"mcp":f"{PUBLIC_BASE_URL}/mcp","pricing":f"{PUBLIC_BASE_URL}/pricing","offer":f"{PUBLIC_BASE_URL}/agent-offer.json","llms_txt":f"{PUBLIC_BASE_URL}/llms.txt","docs":f"{PUBLIC_BASE_URL}/docs","human":f"{PUBLIC_BASE_URL}/human","privacy":f"{PUBLIC_BASE_URL}/privacy","terms":f"{PUBLIC_BASE_URL}/terms","broadcast_enabled":os.environ.get("BAW_MAINNET_BROADCAST")=="I_UNDERSTAND_MAINNET"}
 @app.get("/llms.txt",response_class=PlainTextResponse)
-def llms():return f"# Build-a-Wallet\n\nCanonical site: {PUBLIC_BASE_URL}\nNON-HUMAN: wallet infrastructure for autonomous agents.\nHUMAN: guided wallet design for people.\nDocs: {PUBLIC_BASE_URL}/docs\nOpenAPI: {PUBLIC_BASE_URL}/openapi.json\nMCP: {PUBLIC_BASE_URL}/mcp\nPricing: {PUBLIC_BASE_URL}/pricing\n"
+def llms():return f"# BuildAWallet.xyz\n\nCanonical site: {PUBLIC_BASE_URL}\nNON-HUMAN: wallet infrastructure for autonomous agents.\nHUMAN: guided wallet design for people.\nDocs: {PUBLIC_BASE_URL}/docs\nOpenAPI: {PUBLIC_BASE_URL}/openapi.json\nMCP: {PUBLIC_BASE_URL}/mcp\nPricing: {PUBLIC_BASE_URL}/pricing\n"
 @app.get("/agent-offer.json")
 def agent_offer():return FileResponse(STATIC/"agent-offer.json",media_type="application/json")
 @app.get("/pricing")
@@ -102,9 +102,16 @@ def privacy():return FileResponse(STATIC/"privacy.html")
 def terms():return FileResponse(STATIC/"terms.html")
 @app.get("/hero-portrait")
 def hero_portrait():
- p=STATIC/"human-robot-center.webp"
+ p=STATIC/"buildawallet-human-robot.webp"
  if not p.exists():raise HTTPException(404,"hero portrait asset missing")
- return FileResponse(p,media_type="image/webp",headers={"Cache-Control":"no-store"})
+ try:
+  raw=p.read_text(encoding="ascii").strip()
+  data=base64.b64decode(raw,validate=False)
+  if not data.startswith(b"RIFF"):
+   raise ValueError("decoded asset is not WebP")
+  return Response(content=data,media_type="image/webp",headers={"Cache-Control":"no-store"})
+ except (UnicodeDecodeError,ValueError,base64.binascii.Error):
+  return FileResponse(p,media_type="image/webp",headers={"Cache-Control":"no-store"})
 @app.get("/robots.txt",response_class=PlainTextResponse)
 def robots():return f"User-agent: *\nAllow: /\nSitemap: {PUBLIC_BASE_URL}/sitemap.xml\n"
 @app.get("/sitemap.xml")
