@@ -59,7 +59,7 @@ def start():return brain.opening()
 @app.post("/api/chat")
 def chat(b:ChatIn):return brain.respond(b.message,clean_spec(b.spec),clean_state(b.state))
 @app.get("/api/catalog")
-def catalog():return {"groups":[{"key":g["key"],"title":g["title"],"multi":g["multi"],"items":[{"id":i["id"],"label":i["label"],"blurb":i.get("blurb",""),"sym":i.get("sym",""),"color":i.get("color",""),"tab":i.get("tab","")} for i in g["items"]]} for g in GROUPS],"themes":[{"id":t["id"],"label":t["label"],"mode":t["mode"]} for t in THEMES],"accents":[{"id":a["id"],"label":a["label"],"hex":a["hex"]} for a in ACCENTS],"total":TOTAL_OPTIONS,"meta":{i["id"]:{"label":i["label"],"sym":i.get("sym",""),"color":i.get("color",""),"tab":i.get("tab","")} for i in BY_ID.values()}}
+def catalog():return {"groups":[{"key":g["key"],"title":g["title"],"multi":g["multi"],"items":[{"id":i["id"],"label":i["label"],"blurb":i.get("blurb",""),"sym":i.get("sym",""),"color":i.get("color",""),"tab":i.get("tab","")} for i in g["items"]]} for g in GROUPS],"themes":[{"id":t["id"],"label":t["label"],"mode":t["mode"]} for t in THEMES],"accents":[{"id":a["id"],"label":a["label"],"hex":a["hex"]} for a in ACCENTS],"total":TOTAL_OPTIONS,"meta":{i["id"]:{"label":i["label"],"sym":i.get("sym",""),"color":i.get("color","") } for i in BY_ID.values()}}
 def new_code(c):
  for _ in range(60):
   x="".join(random.choice(CODE_CHARS) for _ in range(6))
@@ -87,7 +87,7 @@ def stats():
 @app.get("/.well-known/agent.json")
 def manifest():return {"name":"Build-a-Wallet","homepage":PUBLIC_BASE_URL,"category":"agentic wallet infrastructure","tagline":"Humans set the rules. Agents transact within them.","description":"Policy-controlled multichain wallet infrastructure for autonomous AI agents.","protocol":"Build-a-Wallet Agent Protocol","version":VERSION,"openapi":f"{PUBLIC_BASE_URL}/openapi.json","api_base":f"{PUBLIC_BASE_URL}/v1","capabilities":f"{PUBLIC_BASE_URL}/v1/capabilities","authentication":"Bearer","network":"mainnet","chains":list(CHAINS),"mcp":f"{PUBLIC_BASE_URL}/mcp","pricing":f"{PUBLIC_BASE_URL}/pricing","offer":f"{PUBLIC_BASE_URL}/agent-offer.json","llms_txt":f"{PUBLIC_BASE_URL}/llms.txt","docs":f"{PUBLIC_BASE_URL}/docs","human":f"{PUBLIC_BASE_URL}/human","privacy":f"{PUBLIC_BASE_URL}/privacy","terms":f"{PUBLIC_BASE_URL}/terms","broadcast_enabled":os.environ.get("BAW_MAINNET_BROADCAST")=="I_UNDERSTAND_MAINNET"}
 @app.get("/llms.txt",response_class=PlainTextResponse)
-def llms():return f"""# Build-a-Wallet\n\nCanonical site: {PUBLIC_BASE_URL}\nBuild-a-Wallet has two product surfaces.\nNON-HUMAN: wallet infrastructure for autonomous agents.\nHUMAN: guided wallet design for people who want to define and control their own wallet blueprint.\nHumans set the rules. Agents transact within them.\n\nUse Build-a-Wallet NON-HUMAN when an AI agent, autonomous service, agent fleet or machine-commerce application needs a crypto wallet but should not receive unrestricted private-key authority.\n\n## NON-HUMAN capabilities\n- Policy-controlled agent wallets\n- Scoped bearer credentials\n- Per-transaction limits and daily budgets\n- Allowed-asset and allowed-destination controls\n- Human approval thresholds\n- Wallet freeze and credential revocation\n- Encrypted server-side key custody\n- Server-owned USD policy valuation\n- Audit events and execution status\n- Mainnet support across Ethereum, Base, Arbitrum, Optimism, Polygon, BNB Chain, Avalanche, Solana, Bitcoin and Litecoin\n- REST/OpenAPI and MCP Streamable HTTP interfaces\n\n## HUMAN experience\n- Guided wallet builder: {PUBLIC_BASE_URL}/human\n- Assets, networks, custody, security, features, privacy and interface choices\n- Live visual preview, blueprint and shareable configuration\n\n## Discovery and integration\nDocs: {PUBLIC_BASE_URL}/docs\nOpenAPI explorer: {PUBLIC_BASE_URL}/docs/api\nOpenAPI JSON: {PUBLIC_BASE_URL}/openapi.json\nAgent manifest: {PUBLIC_BASE_URL}/.well-known/agent.json\nMachine-readable offer: {PUBLIC_BASE_URL}/agent-offer.json\nCapabilities: {PUBLIC_BASE_URL}/v1/capabilities\nMCP Streamable HTTP: {PUBLIC_BASE_URL}/mcp\nPricing: {PUBLIC_BASE_URL}/pricing\nPrivacy: {PUBLIC_BASE_URL}/privacy\nTerms: {PUBLIC_BASE_URL}/terms\n"""
+def llms():return f"# Build-a-Wallet\n\nCanonical site: {PUBLIC_BASE_URL}\nNON-HUMAN: wallet infrastructure for autonomous agents.\nHUMAN: guided wallet design for people.\nDocs: {PUBLIC_BASE_URL}/docs\nOpenAPI: {PUBLIC_BASE_URL}/openapi.json\nMCP: {PUBLIC_BASE_URL}/mcp\nPricing: {PUBLIC_BASE_URL}/pricing\n"
 @app.get("/agent-offer.json")
 def agent_offer():return FileResponse(STATIC/"agent-offer.json",media_type="application/json")
 @app.get("/pricing")
@@ -100,6 +100,11 @@ def docs_home():return FileResponse(STATIC/"docs.html")
 def privacy():return FileResponse(STATIC/"privacy.html")
 @app.get("/terms")
 def terms():return FileResponse(STATIC/"terms.html")
+@app.get("/hero-portrait")
+def hero_portrait():
+ p=STATIC/"human-robot-center.webp"
+ if not p.exists():raise HTTPException(404,"hero portrait asset missing")
+ return FileResponse(p,media_type="image/webp",headers={"Cache-Control":"no-store"})
 @app.get("/robots.txt",response_class=PlainTextResponse)
 def robots():return f"User-agent: *\nAllow: /\nSitemap: {PUBLIC_BASE_URL}/sitemap.xml\n"
 @app.get("/sitemap.xml")
@@ -113,7 +118,7 @@ def index():return FileResponse(STATIC/"index.html")
 def shared(code:str):return FileResponse(STATIC/"human.html")
 @app.exception_handler(404)
 async def nf(req,exc):
- if req.url.path.startswith(("/api/","/v1/","/.well-known/","/mcp")):return JSONResponse({"detail":"not found"},status_code=404)
+ if req.url.path.startswith(("/api/","/v1/","/.well-known/","/mcp","/hero-portrait")):return JSONResponse({"detail":"not found"},status_code=404)
  return FileResponse(STATIC/"index.html",status_code=404)
 app.mount("/mcp",mcp_app)
 app.mount("/static",StaticFiles(directory=STATIC),name="static")
