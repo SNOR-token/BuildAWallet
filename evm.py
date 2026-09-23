@@ -1,25 +1,35 @@
-"""EVM mainnet adapter. Prepares and simulates policy-approved native transfers.
-Broadcast is intentionally a separate signed-transaction endpoint; raw private keys never enter HTTP requests.
+"""EVM mainnet execution adapter.
+Server-owned chain IDs, RPC-derived nonce/fees, simulation, isolated signing, broadcast and receipts.
 """
 from __future__ import annotations
+from eth_account import Account
 from chains import CHAINS,rpc_call
 
 def _addr(v):
- if not isinstance(v,str) or len(v)!=42 or not v.startswith("0x"):
-  raise ValueError("invalid EVM address")
+ if not isinstance(v,str) or len(v)!=42 or not v.startswith("0x"): raise ValueError("invalid EVM address")
  int(v[2:],16); return v
+
+def balance(chain,address):
+ address=_addr(address); wei=int(rpc_call(chain,"eth_getBalance",[address,"latest"]),16)
+ return {"address":address,"balance_wei":wei,"balance_native":str(wei/10**18)}
 
 def prepare_native(chain,sender,destination,amount_wei):
  cfg=CHAINS.get(chain)
  if not cfg or cfg["family"]!="evm": raise ValueError("not an EVM chain")
- sender=_addr(sender); destination=_addr(destination); value=hex(int(amount_wei))
+ sender=_addr(sender); destination=_addr(destination); amount_wei=int(amount_wei)
+ if amount_wei<=0: raise ValueError("amount must be positive")
  nonce=int(rpc_call(chain,"eth_getTransactionCount",[sender,"pending"]),16)
  gas_price=int(rpc_call(chain,"eth_gasPrice"),16)
- tx={"from":sender,"to":destination,"value":value,"nonce":hex(nonce),"chainId":hex(cfg["chain_id"]),"gasPrice":hex(gas_price)}
- gas=int(rpc_call(chain,"eth_estimateGas",[tx]),16); tx["gas"]=hex(gas)
- # eth_call catches many reverts before signing; native transfer should return 0x.
- rpc_call(chain,"eth_call",[tx,"pending"])
- return {"chain":chain,"chain_id":cfg["chain_id"],"unsigned_transaction":tx,"fee_native":gas*gas_price,"simulation":"passed"}
+ call={"from":sender,"to":destination,"value":hex(amount_wei)}
+ gas=int(rpc_call(chain,"eth_estimateGas",[call]),16)
+ rpc_call(chain,"eth_call",[call,"pending"])
+ tx={"to":destination,"value":amount_wei,"nonce":nonce,"chainId":cfg["chain_id"],"gasPrice":gas_price,"gas":gas}
+ return {"chain":chain,"chain_id":cfg["chain_id"],"unsigned_transaction":tx,"fee_wei":gas*gas_price,"simulation":"passed"}
+
+def sign_transaction(unsigned_tx,private_key):
+ signed=Account.sign_transaction(unsigned_tx,private_key)
+ raw=getattr(signed,"raw_transaction",getattr(signed,"rawTransaction",None))
+ return "0x"+bytes(raw).hex()
 
 def broadcast_signed(chain,raw_tx):
  cfg=CHAINS.get(chain)
