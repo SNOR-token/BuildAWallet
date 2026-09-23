@@ -7,9 +7,8 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
-sys.path.insert(0,str(Path(__file__).parent/"app"))
-import brain
-from catalog import ACCENTS,BY_ID,GROUPS,THEMES,TOTAL_OPTIONS
+from app import brain
+from app.catalog import ACCENTS,BY_ID,GROUPS,THEMES,TOTAL_OPTIONS
 from agent_protocol import router as agent_router, init_agent_db
 from chains import CHAINS
 from mcp_server import mcp, mcp_app

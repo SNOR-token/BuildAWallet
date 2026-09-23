@@ -1,0 +1,13 @@
+{
+  "name": "buildawallet-human-api",
+  "main": "src/main.py",
+  "compatibility_date": "2026-09-23",
+  "compatibility_flags": ["python_workers"],
+  "routes": [
+    { "pattern": "buildawallet.xyz/api/*", "zone_name": "buildawallet.xyz" },
+    { "pattern": "buildawallet.xyz/healthz", "zone_name": "buildawallet.xyz" }
+  ],
+  "d1_databases": [
+    { "binding": "DB", "database_name": "buildawallet", "database_id": "00000000-0000-4000-8000-000000000001", "migrations_dir": "migrations" }
+  ]
+}

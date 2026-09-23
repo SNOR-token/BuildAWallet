@@ -11,7 +11,7 @@ import random
 import re
 from typing import Any
 
-from catalog import (ACCENTS, ASSETS, BY_ID, CUSTODY, FEATURES, GROUPS,
+from app.catalog import (ACCENTS, ASSETS, BY_ID, CUSTODY, FEATURES, GROUPS,
                      NETWORKS, PLATFORMS, PRIVACY, SECURITY, STYLES, THEMES,
                      TOTAL_OPTIONS, label)
 
