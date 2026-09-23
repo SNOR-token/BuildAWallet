@@ -1,9 +1,9 @@
-name: Agentic v1 CI
+name: BuildAWallet CI
 
 on:
   push:
     branches:
-      - agentic-v1
+      - main
   pull_request:
     branches:
       - main
@@ -28,8 +28,4 @@ jobs:
       - name: Compile
         run: python -m py_compile main.py agent_protocol.py chains.py evm.py solana_adapter.py utxo_adapter.py pricing.py wallet_crypto.py mcp_server.py app/brain.py app/catalog.py
       - name: Test
-        env:
-          DATA_DIR: /tmp/baw-ci-data
-          AGENT_BOOTSTRAP_SECRET: ci-bootstrap-secret
-          BAW_MASTER_KEY: ci-master-key-with-at-least-32-bytes-of-entropy
         run: pytest -q
