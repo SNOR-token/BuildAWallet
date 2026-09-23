@@ -3,97 +3,24 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Build-a-Wallet — Wallet infrastructure for the agentic internet</title>
+<title>Build-a-Wallet — NON-HUMAN agent wallet infrastructure</title>
 <meta name="description" content="Policy-controlled multichain wallet infrastructure for AI agents. Give autonomous agents bounded financial authority across Ethereum, Base, Solana, Bitcoin, Litecoin and more.">
-<meta name="theme-color" content="#060914">
+<meta name="theme-color" content="#071009">
 <link rel="canonical" href="https://buildawallet.xyz/">
 <meta property="og:url" content="https://buildawallet.xyz/">
-<meta property="og:title" content="Build-a-Wallet — Wallet infrastructure for the agentic internet">
+<meta property="og:title" content="Build-a-Wallet — NON-HUMAN agent wallet infrastructure">
 <meta property="og:description" content="Scoped credentials, budgets, approvals, encrypted custody, REST/OpenAPI and MCP for autonomous agents.">
 <meta property="og:type" content="website">
 <link rel="icon" href="/static/favicon.svg?v=1" type="image/svg+xml">
-<link rel="stylesheet" href="/static/landing.css?v=1">
+<link rel="stylesheet" href="/static/landing.css?v=2">
 </head>
 <body>
-<nav class="nav">
-  <div class="shell navin">
-    <a class="brand" href="https://buildawallet.xyz/"><span class="mark">W</span><span>Build-a-Wallet</span></a>
-    <div class="links">
-      <a href="#platform">Platform</a>
-      <a href="#security">Security</a>
-      <a href="https://buildawallet.xyz/pricing">Pricing</a>
-      <a href="https://buildawallet.xyz/docs/api">Docs</a>
-      <a href="https://buildawallet.xyz/agent-offer.json">For AI</a>
-    </div>
-    <a class="navcta" href="https://buildawallet.xyz/docs/api">Start building →</a>
-  </div>
-</nav>
-
+<nav class="nav"><div class="shell navin"><a class="brand" href="/"><span class="mark">W</span><span>Build-a-Wallet</span></a><div class="links"><a href="/">NON-HUMAN</a><a href="/human">HUMAN</a><a href="#platform">Platform</a><a href="/pricing">Pricing</a><a href="/docs">Docs</a></div><a class="navcta" href="/docs">Start building →</a></div></nav>
 <main>
-  <section class="hero">
-    <div class="shell heroGrid">
-      <div>
-        <div class="eyebrow"><span class="dot"></span> MAINNET AGENT WALLET INFRASTRUCTURE</div>
-        <h1>Financial rails for <span class="grad">autonomous agents.</span></h1>
-        <p class="lead">Give AI agents real wallets without giving them unrestricted financial power. Build-a-Wallet combines multichain custody, programmable policy, approvals, auditability and execution behind one machine-native interface.</p>
-        <div class="heroActions">
-          <a class="btn primary" href="https://buildawallet.xyz/docs/api">Explore the API →</a>
-          <a class="btn secondary" href="https://buildawallet.xyz/pricing">View pricing</a>
-          <a class="btn secondary" href="https://buildawallet.xyz/mcp">Connect with MCP</a>
-        </div>
-        <div class="micro">
-          <span>● Broadcast off by default</span>
-          <span>● Operator separation</span>
-          <span>● Policy-enforced execution</span>
-          <span>● Mainnet multichain</span>
-        </div>
-      </div>
-
-      <div class="visual" aria-label="Agent wallet policy network visualization">
-        <div class="orb"></div><div class="pulse"></div><div class="pulse p2"></div>
-        <div class="mesh">
-          <div class="node n1"><span>◎</span><b>AI Agent</b><span>request</span></div>
-          <div class="node n2"><span>◇</span><b>Human</b><span>approval</span></div>
-          <div class="node n3"><span>◉</span><b>Chain</b><span>execute</span></div>
-          <div class="node n4"><span>⌁</span><b>Audit</b><span>record</span></div>
-          <div class="node n5"><span>✦</span><b>Policy</b><span>enforce</span></div>
-          <div class="core">
-            <div class="corehead"><span class="screenTitle">Agent Wallet</span><span class="status">● ACTIVE</span></div>
-            <div class="rule"><span>Daily budget</span><strong>$50.00</strong></div>
-            <div class="rule"><span>Approval above</span><strong>$10.00</strong></div>
-            <div class="rule"><span>Allowed asset</span><strong>ETH</strong></div>
-            <div class="rule"><span>Authority</span><strong>Scoped</strong></div>
-            <div class="rule"><span>Broadcast</span><strong>Operator only</strong></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="strip">
-    <div class="shell chainrow">
-      <span class="chip">Ethereum</span><span class="chip">Base</span><span class="chip">Arbitrum</span><span class="chip">Optimism</span><span class="chip">Polygon</span><span class="chip">BNB Chain</span><span class="chip">Avalanche</span><span class="chip">Solana</span><span class="chip">Bitcoin</span><span class="chip">Litecoin</span>
-    </div>
-  </section>
-
-  <section class="block" id="platform">
-    <div class="shell">
-      <div class="sectionTop"><div class="eyebrow">BUILT FOR AGENTIC COMMERCE</div><h2>Wallets that obey policy before they obey the agent.</h2><p>Your application defines the authority boundary. Agents can act quickly inside it, while spend limits, destinations, asset rules and human approval remain server-controlled.</p></div>
-      <div class="grid3">
-        <article class="card"><div class="icon">◎</div><h3>Scoped agent authority</h3><p>Create persistent, task, session and budget wallets with narrowly defined permissions instead of handing agents unrestricted keys.</p></article>
-        <article class="card"><div class="icon">⌁</div><h3>Programmable policy</h3><p>Per-transaction limits, daily budgets, asset allowlists, destination controls and human approval thresholds execute before signing.</p></article>
-        <article class="card"><div class="icon">◇</div><h3>Human control remains final</h3><p>Separate operator credentials approve, freeze, revoke and execute. The requesting agent cannot silently elevate its own authority.</p></article>
-        <article class="card"><div class="icon">◉</div><h3>Multichain execution</h3><p>One control plane for EVM networks, Solana, Bitcoin and Litecoin with chain-aware balance, signing, broadcast and receipt primitives.</p></article>
-        <article class="card" id="security"><div class="icon">✦</div><h3>Security by separation</h3><p>Encrypted key custody, credential scopes, authoritative pricing, execution locks and a hard mainnet broadcast switch reduce blast radius.</p></article>
-        <article class="card"><div class="icon">↗</div><h3>Machine-native discovery</h3><p>REST, OpenAPI, MCP Streamable HTTP, agent manifest, llms.txt and structured offer metadata let AI systems understand the platform directly.</p></article>
-      </div>
-    </div>
-  </section>
-
-  <section class="block">
-    <div class="shell codeWrap">
-      <div class="sectionTop"><div class="eyebrow">ONE POLICY LAYER</div><h2>Agent requests in. Controlled execution out.</h2><p>Build-a-Wallet turns an agent’s intent into a policy-checked transaction lifecycle: authenticate, value, authorize, approve when required, sign in isolation, broadcast and track.</p><div class="heroActions"><a class="btn primary" href="https://buildawallet.xyz/openapi.json">OpenAPI spec</a><a class="btn secondary" href="https://buildawallet.xyz/.well-known/agent.json">Agent manifest</a></div></div>
-      <div class="terminal"><div class="termbar"><i></i><i></i><i></i></div><pre><span class="muted">// Agent asks to pay. Policy stays server-side.</span>
+<section class="hero"><div class="shell heroGrid"><div><div class="eyebrow"><span class="dot"></span> NON-HUMAN / MAINNET AGENT WALLET INFRASTRUCTURE</div><h1>Financial rails for <span class="grad">autonomous agents.</span></h1><p class="lead">Give AI agents real wallets without giving them unrestricted financial power. Build-a-Wallet combines multichain custody, programmable policy, approvals, auditability and execution behind one machine-native interface.</p><div class="heroActions"><a class="btn primary" href="/docs">Explore the docs →</a><a class="btn secondary" href="/pricing">View pricing</a><a class="btn secondary" href="/human">I’m a human user</a></div><div class="micro"><span>● Broadcast off by default</span><span>● Operator separation</span><span>● Policy-enforced execution</span><span>● Mainnet multichain</span></div></div><div class="visual" aria-label="Agent wallet policy network visualization"><div class="orb"></div><div class="pulse"></div><div class="pulse p2"></div><div class="mesh"><div class="node n1"><span>◎</span><b>AI Agent</b><span>request</span></div><div class="node n2"><span>◇</span><b>Human</b><span>approval</span></div><div class="node n3"><span>◉</span><b>Chain</b><span>execute</span></div><div class="node n4"><span>⌁</span><b>Audit</b><span>record</span></div><div class="node n5"><span>✦</span><b>Policy</b><span>enforce</span></div><div class="core"><div class="corehead"><span class="screenTitle">Agent Wallet</span><span class="status">● ACTIVE</span></div><div class="rule"><span>Daily budget</span><strong>$50.00</strong></div><div class="rule"><span>Approval above</span><strong>$10.00</strong></div><div class="rule"><span>Allowed asset</span><strong>ETH</strong></div><div class="rule"><span>Authority</span><strong>Scoped</strong></div><div class="rule"><span>Broadcast</span><strong>Operator only</strong></div></div></div></div></div></section>
+<section class="strip"><div class="shell chainrow"><span class="chip">Ethereum</span><span class="chip">Base</span><span class="chip">Arbitrum</span><span class="chip">Optimism</span><span class="chip">Polygon</span><span class="chip">BNB Chain</span><span class="chip">Avalanche</span><span class="chip">Solana</span><span class="chip">Bitcoin</span><span class="chip">Litecoin</span></div></section>
+<section class="block" id="platform"><div class="shell"><div class="sectionTop"><div class="eyebrow">BUILT FOR AGENTIC COMMERCE</div><h2>Wallets that obey policy before they obey the agent.</h2><p>Your application defines the authority boundary. Agents can act quickly inside it, while spend limits, destinations, asset rules and human approval remain server-controlled.</p></div><div class="grid3"><article class="card"><div class="icon">◎</div><h3>Scoped agent authority</h3><p>Create persistent, task, session and budget wallets with narrowly defined permissions instead of handing agents unrestricted keys.</p></article><article class="card"><div class="icon">⌁</div><h3>Programmable policy</h3><p>Per-transaction limits, daily budgets, asset allowlists, destination controls and human approval thresholds execute before signing.</p></article><article class="card"><div class="icon">◇</div><h3>Human control remains final</h3><p>Separate operator credentials approve, freeze, revoke and execute. The requesting agent cannot silently elevate its own authority.</p></article><article class="card"><div class="icon">◉</div><h3>Multichain execution</h3><p>One control plane for EVM networks, Solana, Bitcoin and Litecoin with chain-aware balance, signing, broadcast and receipt primitives.</p></article><article class="card" id="security"><div class="icon">✦</div><h3>Security by separation</h3><p>Encrypted key custody, credential scopes, authoritative pricing, execution locks and a hard mainnet broadcast switch reduce blast radius.</p></article><article class="card"><div class="icon">↗</div><h3>Machine-native discovery</h3><p>REST, OpenAPI, MCP Streamable HTTP, agent manifest, llms.txt and structured offer metadata let AI systems understand the platform directly.</p></article></div></div></section>
+<section class="block"><div class="shell codeWrap"><div class="sectionTop"><div class="eyebrow">ONE POLICY LAYER</div><h2>Agent requests in. Controlled execution out.</h2><p>Build-a-Wallet turns an agent’s intent into a policy-checked transaction lifecycle: authenticate, value, authorize, approve when required, sign in isolation, broadcast and track.</p><div class="heroActions"><a class="btn primary" href="/openapi.json">OpenAPI spec</a><a class="btn secondary" href="/.well-known/agent.json">Agent manifest</a></div></div><div class="terminal"><div class="termbar"><i></i><i></i><i></i></div><pre><span class="muted">// Agent asks to pay. Policy stays server-side.</span>
 POST /v1/wallets/wal_123/transactions
 Authorization: Bearer baw_••••••
 Idempotency-Key: task-8472
@@ -109,18 +36,8 @@ Idempotency-Key: task-8472
   "status": "approval_required",
   "reason": "human_approval_threshold",
   "amount_usd": 7.84
-}</pre></div>
-    </div>
-  </section>
-
-  <section class="block">
-    <div class="shell cta">
-      <div><h2>The wallet layer for an internet run by agents.</h2><p>Start with the API, connect through MCP, or inspect the machine-readable offer directly.</p></div>
-      <div class="heroActions"><a class="btn primary" href="https://buildawallet.xyz/docs/api">Read the docs →</a><a class="btn secondary" href="https://buildawallet.xyz/pricing">Pricing</a></div>
-    </div>
-  </section>
+}</pre></div></div></section>
+<section class="block"><div class="shell cta"><div><h2>The wallet layer for an internet run by agents.</h2><p>Start with the docs, connect through MCP, or inspect the machine-readable offer directly.</p></div><div class="heroActions"><a class="btn primary" href="/docs">Read the docs →</a><a class="btn secondary" href="/pricing">Pricing</a></div></div></section>
 </main>
-
-<footer class="footer"><div class="shell footerin"><span>© 2026 Build-a-Wallet · buildawallet.xyz</span><span><a href="https://buildawallet.xyz/llms.txt">llms.txt</a><a href="https://buildawallet.xyz/agent-offer.json">Agent offer</a><a href="https://buildawallet.xyz/openapi.json">OpenAPI</a><a href="https://buildawallet.xyz/mcp">MCP</a></span></div></footer>
-</body>
-</html>
+<footer class="footer"><div class="shell footerin"><span>© 2026 Build-a-Wallet · buildawallet.xyz</span><span><a href="/">NON-HUMAN</a><a href="/human">HUMAN</a><a href="/docs">Docs</a><a href="/pricing">Pricing</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="/llms.txt">llms.txt</a></span></div></footer>
+</body></html>
