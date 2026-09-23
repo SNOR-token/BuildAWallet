@@ -1,4 +1,7 @@
-import os,shutil
+import os,shutil,sys
+from pathlib import Path
+ROOT=Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:sys.path.insert(0,str(ROOT))
 os.environ["DATA_DIR"]="/tmp/baw-test-data"
 os.environ["AGENT_BOOTSTRAP_SECRET"]="test-bootstrap-secret"
 os.environ["BAW_MASTER_KEY"]="test-master-key-with-at-least-32-bytes-of-entropy"
