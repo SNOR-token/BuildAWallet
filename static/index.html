@@ -3,40 +3,54 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Build-a-Wallet: design your own crypto wallet, one question at a time</title>
-<meta name="description" content="Talk to the wallet architect and watch your own crypto wallet assemble itself: coins, custody, security, features, look. 150 options, no code, a shareable blueprint at the end.">
+<title>Build-a-Wallet — Wallet infrastructure for the agentic internet</title>
+<meta name="description" content="Policy-controlled multichain wallet infrastructure for AI agents. Humans set the rules; agents transact within scoped authority across EVM, Solana, Bitcoin and Litecoin.">
 <meta name="theme-color" content="#0a0c11">
-<meta property="og:title" content="Build-a-Wallet">
-<meta property="og:description" content="Describe the crypto wallet you want. Watch it build itself, screen by screen.">
+<meta property="og:title" content="Build-a-Wallet — Wallet infrastructure for the agentic internet">
+<meta property="og:description" content="APIs, MCP, scoped credentials, budgets, approvals and multichain execution for autonomous agents.">
 <meta property="og:type" content="website">
 <link rel="icon" href="/static/favicon.svg?v=1" type="image/svg+xml">
-<link rel="stylesheet" href="/static/style.css?v=7">
+<link rel="stylesheet" href="/static/style.css?v=8">
 </head>
 <body>
-<h1 class="sr-only">Build-a-Wallet: design your own crypto wallet by describing it</h1>
+<h1 class="sr-only">Build-a-Wallet — policy-controlled wallet infrastructure for autonomous AI agents</h1>
+<div class="product-banner">
+  <div class="product-copy">
+    <span class="eyebrow">Wallet infrastructure for the agentic internet</span>
+    <strong>Humans set the rules. Agents transact within them.</strong>
+    <span>Give AI agents scoped financial authority without handing them unrestricted keys. Build-a-Wallet combines multichain wallets, policy limits, approvals, encrypted custody, REST/OpenAPI and MCP.</span>
+  </div>
+  <div class="product-actions">
+    <a href="/pricing">API pricing</a>
+    <a href="/docs/api">API docs</a>
+    <a href="/.well-known/agent.json">Agent manifest</a>
+    <a href="/llms.txt">llms.txt</a>
+  </div>
+</div>
 <noscript>
   <div class="noscript">
     <h2>Build-a-Wallet</h2>
-    <p>Describe the crypto wallet you want and this page assembles it in front of you: which coins it
-    holds, who holds the keys, what protects it, what it can do, where it runs and how it looks.
-    150 options, no code, and a shareable blueprint at the end.</p>
-    <p>The builder needs JavaScript. Switch it on and reload to start.</p>
+    <p>Build-a-Wallet is policy-controlled multichain wallet infrastructure for autonomous agents. Humans define budgets, assets, destinations and approval thresholds; agents receive scoped authority and machine-readable execution results.</p>
+    <p>The visual wallet architect below needs JavaScript. The API and discovery endpoints do not.</p>
   </div>
 </noscript>
 <div class="app">
-
   <section class="pane pane-chat">
     <header class="head">
       <div class="logo">
         <div class="logo-mark">W</div>
-        <div>Build-a-Wallet<small>the wallet architect</small></div>
+        <div>Build-a-Wallet<small>agentic wallet infrastructure</small></div>
       </div>
       <div class="head-spacer"></div>
       <div class="progress-wrap">
         <div class="progress"><i id="bar"></i></div>
-        <span class="pill"><b id="chosen">0</b> / <span id="total">150</span> options</span>
+        <span class="pill"><b id="chosen">0</b> / <span id="total">150</span> wallet options</span>
       </div>
     </header>
+
+    <div class="infra-note">
+      <b>What the platform does:</b> create wallets for agents, constrain what they may spend, require human approval above thresholds, freeze/revoke authority, read balances, and execute mainnet transactions through one policy layer. Current chain registry includes Ethereum, Base, Arbitrum, Optimism, Polygon, BNB Chain, Avalanche, Solana, Bitcoin and Litecoin.
+    </div>
 
     <div class="chat" id="chat" aria-live="polite">
       <div class="chips" id="chips"></div>
@@ -46,10 +60,10 @@
 
     <div class="composer">
       <form id="form">
-        <textarea id="input" rows="1" placeholder="Tell me what this wallet should do..." autocomplete="off" aria-label="Tell the wallet architect what you want"></textarea>
+        <textarea id="input" rows="1" placeholder="Describe the wallet or agent authority you want..." autocomplete="off" aria-label="Describe the wallet or agent authority you want"></textarea>
         <button class="send" id="sendBtn" type="submit">Send</button>
       </form>
-      <div class="hint">Try: <em>bitcoin and stablecoins, no seed phrase, face ID, swap and staking</em></div>
+      <div class="hint">Try: <em>an agent wallet on Base with a $50 daily budget and human approval above $10</em></div>
     </div>
   </section>
 
@@ -64,9 +78,8 @@
     </nav>
     <div class="view view-preview" id="view"></div>
   </section>
-
 </div>
 <div class="toast" id="toast"></div>
-<script src="/static/app.js?v=7"></script>
+<script src="/static/app.js?v=8"></script>
 </body>
 </html>
