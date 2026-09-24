@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Build your wallet — BuildAWallet</title>
+<meta name="description" content="Multi-step wallet builder: assets, custody, features, then studio.">
+<link rel="canonical" href="https://buildawallet.xyz/human/build">
+<style>
+:root{--bg:#0b120c;--panel:#121a13;--line:rgba(213,255,137,.14);--ink:#f4ffe8;--muted:#9aab8f;--green:#82f27a;--yellow:#ffe66d}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 20% 0%,#1a2210,var(--bg) 45%);color:var(--ink);font-family:Inter,system-ui,sans-serif;min-height:100vh}
+a{color:inherit;text-decoration:none}
+.top{display:flex;align-items:center;gap:16px;padding:16px 22px;border-bottom:1px solid var(--line);background:rgba(7,16,9,.8);backdrop-filter:blur(12px);position:sticky;top:0;z-index:10}
+.brand{font-weight:900}.steps{display:flex;gap:8px;margin-left:auto;flex-wrap:wrap}
+.step{padding:6px 12px;border-radius:999px;border:1px solid var(--line);font-size:12px;color:var(--muted)}
+.step.on{background:linear-gradient(135deg,var(--green),var(--yellow));color:#071009;font-weight:800}
+main{max-width:980px;margin:0 auto;padding:28px 18px 80px}
+h1{font-size:clamp(28px,4vw,42px);letter-spacing:-.03em;margin:0 0 8px}
+.sub{color:var(--muted);margin:0 0 24px;line-height:1.5}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+.card{border:1px solid var(--line);background:var(--panel);border-radius:14px;padding:14px;cursor:pointer;transition:.15s}
+.card:hover{border-color:rgba(130,242,122,.45)}
+.card.on{outline:2px solid var(--green);background:#152016}
+.card b{display:block;margin-bottom:4px}
+.card span{font-size:12px;color:var(--muted);line-height:1.35}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:28px}
+.btn{padding:12px 18px;border-radius:12px;border:1px solid var(--line);font-weight:800;cursor:pointer;background:rgba(255,255,255,.04);color:var(--ink)}
+.btn.primary{background:linear-gradient(135deg,var(--green),var(--yellow));color:#071009;border:0}
+.panel{display:none}.panel.on{display:block}
+.progress{height:6px;background:rgba(255,255,255,.06);border-radius:99px;overflow:hidden;margin:18px 0 24px}
+.progress i{display:block;height:100%;width:25%;background:linear-gradient(90deg,var(--green),var(--yellow));transition:.2s}
+</style>
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="/">BuildAWallet</a>
+  <nav class="steps">
+    <span class="step on" data-s="1">1 Assets</span>
+    <span class="step" data-s="2">2 Networks</span>
+    <span class="step" data-s="3">3 Custody</span>
+    <span class="step" data-s="4">4 Features</span>
+  </nav>
+</header>
+<main>
+  <div class="progress"><i id="bar"></i></div>
+  <section class="panel on" id="p1">
+    <h1>What should it hold?</h1>
+    <p class="sub">Pick the assets your wallet will manage. You can refine later in the studio.</p>
+    <div class="grid" id="g-assets"></div>
+  </section>
+  <section class="panel" id="p2">
+    <h1>Which networks?</h1>
+    <p class="sub">Mainnet networks the wallet will talk to.</p>
+    <div class="grid" id="g-networks"></div>
+  </section>
+  <section class="panel" id="p3">
+    <h1>Who controls the keys?</h1>
+    <p class="sub">Custody model and core security controls.</p>
+    <div class="grid" id="g-custody"></div>
+    <h1 style="margin-top:28px;font-size:22px">Security</h1>
+    <div class="grid" id="g-security" style="margin-top:12px"></div>
+  </section>
+  <section class="panel" id="p4">
+    <h1>How should it behave?</h1>
+    <p class="sub">Product features for the live wallet experience.</p>
+    <div class="grid" id="g-features"></div>
+  </section>
+  <div class="actions">
+    <button class="btn" id="back" type="button">Back</button>
+    <button class="btn primary" id="next" type="button">Continue</button>
+  </div>
+</main>
+<script>
+const SPEC_KEY='baw_human_spec_v1';
+const state={step:1,spec:{name:'',purpose:'',assets:[],networks:[],custody:'',security:[],features:[],platforms:[],privacy:[],style:'',theme:'t_dark',accent:'a_green'}};
+try{Object.assign(state.spec,JSON.parse(localStorage.getItem(SPEC_KEY)||'{}'))}catch(e){}
+function save(){localStorage.setItem(SPEC_KEY,JSON.stringify(state.spec))}
+function card(item,group,multi){
+  const el=document.createElement('button');el.type='button';el.className='card';
+  const on=multi?(state.spec[group]||[]).includes(item.id):state.spec[group]===item.id;
+  if(on)el.classList.add('on');
+  el.innerHTML=`<b>${item.label}</b><span>${item.blurb||''}</span>`;
+  el.onclick=()=>{
+    if(multi){const arr=state.spec[group]||[];const i=arr.indexOf(item.id);if(i>=0)arr.splice(i,1);else arr.push(item.id);state.spec[group]=arr}
+    else state.spec[group]=item.id;
+    save();render();
+  };
+  return el;
+}
+let catalog=null;
+async function load(){
+  const r=await fetch('/api/catalog');catalog=await r.json();render();
+}
+function render(){
+  document.querySelectorAll('.step').forEach(s=>s.classList.toggle('on',+s.dataset.s===state.step));
+  document.querySelectorAll('.panel').forEach((p,i)=>p.classList.toggle('on',i+1===state.step));
+  document.getElementById('bar').style.width=(state.step*25)+'%';
+  document.getElementById('back').style.visibility=state.step===1?'hidden':'visible';
+  document.getElementById('next').textContent=state.step===4?'Open studio →':'Continue';
+  if(!catalog)return;
+  const map={assets:'g-assets',networks:'g-networks',custody:'g-custody',security:'g-security',features:'g-features'};
+  for(const g of catalog.groups){
+    const host=document.getElementById(map[g.key]);if(!host)continue;host.innerHTML='';
+    for(const item of g.items)host.appendChild(card(item,g.key,g.multi));
+  }
+}
+document.getElementById('back').onclick=()=>{if(state.step>1){state.step--;render()}};
+document.getElementById('next').onclick=()=>{
+  if(state.step<4){state.step++;render();window.scrollTo(0,0);return}
+  save();location.href='/human/studio';
+};
+load();
+</script>
+</body>
+</html>
