@@ -9,7 +9,7 @@
 `cloudflare-agent/` is watch-only on Sepolia. The endpoints below describe
 local prototype behavior; they are not available on buildawallet.xyz.
 
-This branch is an isolated machine-first evolution of the existing Build-a-Wallet project. `main` remains untouched.
+These endpoints describe local prototype behavior, not the public API.
 
 ## Discovery
 
