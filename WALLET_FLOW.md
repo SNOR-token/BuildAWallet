@@ -6,7 +6,7 @@
 2. `/build`: five steps for assets, networks, custody/security, features/privacy, and platform/style. Answers are kept on the visitor's device as a draft.
 3. `/auth`: instructions to confirm email via Cloudflare Access one-time PIN.
 4. `/studio`: wallet preview, blueprint, option vault, gallery, and a default-open AI architect chat powered by the `/api/*` Python Worker. The Studio route verifies the Cloudflare Access application JWT before serving HTML.
-5. APK deployment: **not implemented**. This repo contains only placeholder Gradle files, with no Android application, signing configuration or APK. The Studio button is disabled until an actual Android wallet project and artifact pipeline exist. A saved blueprint is a design spec, not a spend-capable wallet APK.
+5. APK deployment: **not implemented**. The recovered Android project is under `android/`. It is a WebView wrapper whose launch URL is `https://buildawallet.xyz/wallet`; this repository does not provide that route. Its build reads release signing details from environment variables. The Studio button stays disabled until a working Android wallet, a per-user configuration flow, and a signed artifact pipeline exist. A saved blueprint is a design spec, not a spend-capable wallet APK.
 
 ## Cloudflare setup required
 
