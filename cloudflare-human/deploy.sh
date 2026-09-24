@@ -43,3 +43,10 @@ uv run pywrangler deploy --config wrangler.deploy.jsonc
 curl --fail --silent --show-error https://buildawallet.xyz/api/start > /dev/null
 curl --fail --silent --show-error https://buildawallet.xyz/healthz
 curl --fail --silent --show-error https://buildawallet.xyz/api/stats > /dev/null
+
+# This unauthenticated probe must never receive Studio HTML or a missing-config 503.
+studio_status=$(curl --silent --show-error --output /dev/null --write-out '%{http_code}' --max-redirs 0 https://buildawallet.xyz/studio)
+case "$studio_status" in
+  302|303|401|403) ;;
+  *) echo "Studio Access check failed (HTTP $studio_status). Verify Pages Access and ACCESS_TEAM_DOMAIN / ACCESS_AUD." >&2; exit 1 ;;
+esac

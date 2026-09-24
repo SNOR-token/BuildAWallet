@@ -25,6 +25,11 @@ solely based on what the user wants, as many features as options."
 - Preview prices and balances are illustrative, generated deterministically
   from the wallet name. Nothing here touches a real chain and there is no
   wallet software behind it: the output is a design spec.
+- The owner prefers a browser extension over an Android APK for HUMAN wallets.
+  The separate extension signing prototype supports Sepolia testnet only.
+  It has not been released as a wallet for real funds.
+- The NON-HUMAN Worker prototype records watch-only Sepolia addresses and
+  refuses signing and transfers. Production mainnet service remains gated.
 - The public container does not ship or mount the legacy signing API. Its
   saved designs do not collect email or list private link codes in stats.
 

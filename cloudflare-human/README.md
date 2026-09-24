@@ -29,7 +29,7 @@ npx wrangler login
 ./deploy.sh
 ```
 
-The script creates the `buildawallet` D1 database if needed, applies its migrations, packages the Python Worker, deploys the `/api/*` and `/healthz` routes, and checks the public builder endpoints. It writes the real database ID into an ignored local config file. No local web server is involved.
+The script creates the `buildawallet` D1 database if needed, applies its migrations, packages the Python Worker, deploys the `/api/*` and `/healthz` routes, and checks the public endpoints. Its last check requires the unauthenticated Studio request to be denied or redirected by Access. It writes the real database ID into an ignored local config file. No local web server is involved.
 
 Keep the existing Pages custom domain attached for all other paths. The Pages project must use `static` as its build output directory and the repository root as its project root so that `functions/w/[code].js` can serve saved blueprint URLs. Test a chat, save, shared link, gallery, and stats after deployment.
 

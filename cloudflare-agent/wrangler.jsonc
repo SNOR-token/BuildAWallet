@@ -1,0 +1,10 @@
+{
+  "name": "buildawallet-agent-control-preview",
+  "main": "src/index.mjs",
+  "compatibility_date": "2026-09-24",
+  "workers_dev": false,
+  "secrets": { "required": ["AGENT_BOOTSTRAP_SECRET", "OPERATOR_BOOTSTRAP_SECRET"] },
+  "d1_databases": [
+    { "binding": "DB", "database_name": "buildawallet-agent-preview", "database_id": "00000000-0000-4000-8000-000000000001", "migrations_dir": "migrations" }
+  ]
+}

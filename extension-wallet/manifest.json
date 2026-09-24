@@ -1,0 +1,8 @@
+{
+  "manifest_version": 3,
+  "name": "BuildAWallet Sepolia Prototype",
+  "version": "0.1.0",
+  "description": "Local Ethereum Sepolia account and offline transaction signing prototype. No mainnet or broadcast.",
+  "action": { "default_popup": "popup.html", "default_title": "Sepolia wallet prototype" },
+  "permissions": ["storage"]
+}

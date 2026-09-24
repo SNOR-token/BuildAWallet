@@ -746,7 +746,21 @@
     SPEC = start.spec; STATE = start.state;
 
     var draft = readDraft();
-    var m = location.pathname.match(/^\/w\/([a-z0-9]{4,32})$/i);
+    var wizardLoaded = false;
+    if (location.pathname === "/studio") {
+      try {
+        var wizard = JSON.parse(localStorage.getItem("baw.wizard.v1") || "null");
+        if (wizard && localStorage.getItem("baw.wizard.completed") === "1") {
+          Object.keys(wizard).forEach(function (key) { if (key in SPEC) SPEC[key] = wizard[key]; });
+          STATE.answered = ["name", "assets", "networks", "custody", "security", "features", "platforms", "privacy", "style"];
+          STATE.current = "";
+          STATE.finished = true;
+          wizardLoaded = true;
+          draft = null;
+        }
+      } catch (e) { /* keep the normal blank builder */ }
+    }
+    var m = location.pathname.match(/^\/w\/([a-z0-9]{6,32})$/i);
     if (draft && !m) {
       SPEC = draft.spec; STATE = draft.state || STATE;
       push("ai", start.reply);
@@ -782,7 +796,11 @@
       } catch (e) { /* fall through to a normal build */ }
     }
 
-    if (!m || !STATE.finished) {
+    if (wizardLoaded) {
+      push("ai", "Your five-step wallet draft is ready. The preview, blueprint and option vault are yours to edit. Ask me what to add or change.");
+      renderChips([{ label: "Show blueprint", send: "show the blueprint" }, { label: "Suggest improvements", send: "what else could I add?" }]);
+      setMeters(100, Object.values(SPEC).reduce(function (n, x) { return n + (Array.isArray(x) ? x.length : (x ? 1 : 0)); }, 0));
+    } else if (!m || !STATE.finished) {
       push("ai", start.reply);
       renderChips(start.chips);
       setMeters(start.progress, start.count);

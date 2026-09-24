@@ -3,7 +3,7 @@
   "canonical_url": "https://buildawallet.xyz",
   "status": "preview",
   "non_human_status": "Production agent wallet creation, signing and broadcasting are not deployed.",
-  "human_status": "Wallet design and shareable blueprints only. No downloadable fund-holding wallet is available.",
+  "human_status": "Wallet design and shareable blueprints only. The downloadable extension is a design preview.",
   "product_surfaces": {
     "non_human": "https://buildawallet.xyz/",
     "human": "https://buildawallet.xyz/human"

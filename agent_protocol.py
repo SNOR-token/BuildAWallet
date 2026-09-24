@@ -118,7 +118,7 @@ def transaction(wallet_id:str,b:TxIn,authorization:str|None=Header(default=None)
   if "send" not in p["allowed_actions"]:s,r="denied","send_capability"
   elif b.asset.upper() not in {x.upper() for x in p["allowed_assets"]}:s,r="denied","asset_not_allowed"
   elif p["max_transaction_usd"] and amount_usd>p["max_transaction_usd"]:s,r="denied","max_transaction"
-  elif p["deny_unknown_destinations"] and p["allowed_destinations"] and b.destination not in set(p["allowed_destinations"]):s,r="denied","destination_not_allowed"
+  elif p["deny_unknown_destinations"] and b.destination not in set(p["allowed_destinations"]):s,r="denied","destination_not_allowed"
   else:
    spent=c.execute("SELECT COALESCE(SUM(amount_usd),0) FROM agent_transactions WHERE wallet_id=? AND status IN ('approval_required','ready_for_signing','executing','broadcast','confirmed') AND substr(created_at,1,10)=?",(wallet_id,now().date().isoformat())).fetchone()[0]
    if p["daily_spend_limit_usd"] and spent+amount_usd>p["daily_spend_limit_usd"]:s,r="denied","daily_spend_limit"
@@ -141,11 +141,16 @@ def execute(tx_id:str,authorization:str|None=Header(default=None)):
   tx=c.execute("SELECT * FROM agent_transactions WHERE id=?",(tx_id,)).fetchone()
   if not tx:raise HTTPException(404,"transaction not found")
   if tx["status"]!="ready_for_signing":raise HTTPException(409,"transaction is not ready for signing")
-  w=dict(c.execute("SELECT * FROM agent_wallets WHERE id=?",(tx["wallet_id"],)).fetchone());cfg=CHAINS[w["chain"]]
+  wallet_row=c.execute("SELECT * FROM agent_wallets WHERE id=?",(tx["wallet_id"],)).fetchone()
+  if not wallet_row:raise HTTPException(404,"wallet not found")
+  w=dict(wallet_row);cfg=CHAINS[w["chain"]]
   if not w or w["status"]!="active":raise HTTPException(403,"wallet is not active")
+  if w["expires_at"] and now()>=datetime.fromisoformat(w["expires_at"]):raise HTTPException(403,"wallet authority expired")
   if tx["asset"].upper()!=cfg["symbol"].upper():raise HTTPException(501,"token execution not enabled in this endpoint")
   c.execute("UPDATE agent_transactions SET status='executing' WHERE id=? AND status='ready_for_signing'",(tx_id,))
-  try:
+  audit(c,"transaction.execution_started",{"transaction_id":tx_id},w["id"],cr["id"])
+ # Commit the claim before calling an external chain. An uncertain broadcast must never become retryable.
+ try:
    if cfg["family"]=="evm":
     prepared=prepare_native(w["chain"],w["address"],tx["destination"],int(round(float(tx["amount"])*10**18)));raw=sign_transaction(prepared["unsigned_transaction"],decrypt_private_key(w["encrypted_key"]));txh=broadcast_signed(w["chain"],raw);meta={"family":"evm","fee_wei":prepared["fee_wei"],"simulation":prepared["simulation"]}
    elif cfg["family"]=="solana":
@@ -155,8 +160,12 @@ def execute(tx_id:str,authorization:str|None=Header(default=None)):
    elif cfg["family"]=="utxo":
     built=utxo_build(w["chain"],decrypt_secret(w["encrypted_key"]).decode(),w["address"],tx["destination"],float(tx["amount"]));txh=utxo_broadcast(w["chain"],built["raw_hex"]);meta={"family":"utxo",**{k:v for k,v in built.items() if k!="raw_hex"}}
    else:raise RuntimeError("unsupported execution family")
-  except Exception as e:
-   c.execute("UPDATE agent_transactions SET status='ready_for_signing',reason=? WHERE id=?",(f"execution_error:{type(e).__name__}",tx_id));audit(c,"transaction.execution_failed",{"transaction_id":tx_id,"error":str(e)},w["id"],cr["id"]);raise HTTPException(503,str(e))
+ except Exception as e:
+  with db() as c:
+   c.execute("UPDATE agent_transactions SET status='execution_unknown',reason=? WHERE id=? AND status='executing'",(f"execution_error:{type(e).__name__}",tx_id))
+   audit(c,"transaction.execution_unknown",{"transaction_id":tx_id,"error_type":type(e).__name__},w["id"],cr["id"])
+  raise HTTPException(503,"Execution outcome unknown; reconcile on chain before any new request") from e
+ with db() as c:
   c.execute("UPDATE agent_transactions SET status='broadcast',tx_hash=?,execution_json=?,reason=NULL WHERE id=?",(txh,json.dumps(meta),tx_id));audit(c,"transaction.broadcast",{"transaction_id":tx_id,"tx_hash":txh,"family":cfg["family"]},w["id"],cr["id"])
   return {"transaction_id":tx_id,"status":"broadcast","chain":w["chain"],"tx_hash":txh,"execution":meta}
 @router.get("/transactions/{tx_id}/receipt")

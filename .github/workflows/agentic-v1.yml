@@ -29,5 +29,27 @@ jobs:
         run: python -m py_compile main.py agent_protocol.py chains.py evm.py solana_adapter.py utxo_adapter.py pricing.py wallet_crypto.py mcp_server.py app/brain.py app/catalog.py
       - name: Test
         run: pytest -q
+      - name: Verify extension vault primitive
+        run: node tests/vault.mjs
+      - name: Verify Studio Access JWT
+        run: node tests/studio_access.mjs
+      - name: Verify agent Worker fails closed
+        run: node tests/agent_worker.mjs
       - name: Ensure no database is tracked
         run: test -z "$(git ls-files 'data/*.db*')"
+  extension-testnet:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: extension-wallet/package-lock.json
+      - run: npm ci --ignore-scripts
+        working-directory: extension-wallet
+      - run: npm test
+        working-directory: extension-wallet
+      - run: npm run build
+        working-directory: extension-wallet

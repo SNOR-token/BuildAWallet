@@ -90,8 +90,29 @@ async def start():
 
 
 @app.post("/api/chat")
-async def chat(body: ChatIn):
-    return brain.respond(body.message, clean_spec(body.spec), clean_state(body.state))
+async def chat(body: ChatIn, request: Request):
+    answer = brain.respond(body.message, clean_spec(body.spec), clean_state(body.state))
+    env = request.scope.get("env")
+    ai = getattr(env, "AI", None) if env is not None else None
+    if ai is not None and body.message.strip():
+        try:
+            from pyodide.ffi import to_js
+            prompt = {
+                "messages": [
+                    {"role": "system", "content": "You are the BuildAWallet wallet design assistant. Offer concise, practical explanations about wallet options. Never claim a blueprint is a deployed wallet, an APK exists, keys were generated, or transactions were sent. Never request recovery phrases or private keys. The application decides the selected options; do not imply you changed them."},
+                    {"role": "user", "content": "Wallet options: " + json.dumps(answer["spec"], ensure_ascii=True)[:2500] + "\nQuestion: " + body.message + "\nBuilder guidance: " + answer["reply"][:800]},
+                ],
+                "max_tokens": 200,
+            }
+            result = await ai.run("@cf/meta/llama-3.1-8b-instruct-fp8", to_js(prompt, dict_converter=__import__("js").Object.fromEntries))
+            data = result.to_py() if hasattr(result, "to_py") else result
+            reply = data.get("response") if isinstance(data, dict) else None
+            if isinstance(reply, str) and reply.strip():
+                answer["reply"] = reply.strip()[:1200]
+        except Exception:
+            # Model availability must never change validated option selections.
+            pass
+    return answer
 
 
 @app.get("/api/catalog")

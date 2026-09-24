@@ -1,0 +1,28 @@
+import assert from 'node:assert/strict';
+import { Transaction } from '../extension-wallet/node_modules/ethers/lib.esm/index.js';
+import { CHAIN_ID, createAccount, importAccount, reviewTransfer, signReviewedTransfer, unlockAccount } from '../extension-wallet/src/engine.mjs';
+
+const password='test-only strong password';
+const original=await createAccount(password);
+assert.equal(original.phrase.split(' ').length,24);
+assert.equal((await importAccount(original.phrase,password)).address,original.address);
+await assert.rejects(unlockAccount(original.vault,original.address,'incorrect passphrase'),/Unable to unlock/);
+await assert.rejects(importAccount('not a valid recovery phrase',password),/Invalid recovery phrase/);
+const wallet=await unlockAccount(original.vault,original.address,password);
+const request={to:'0x000000000000000000000000000000000000dEaD',amount:'0.001',nonce:'2',gasLimit:'21000',maxFeeGwei:'2',priorityFeeGwei:'1'};
+const reviewed=reviewTransfer(request);
+assert.equal(CHAIN_ID,11155111n);
+assert.equal(reviewed.maximumFeeWei,42_000_000_000_000n);
+const raw=await signReviewedTransfer(wallet,reviewed);
+const decoded=Transaction.from(raw);
+assert.equal(decoded.chainId,CHAIN_ID);
+assert.equal(decoded.from,original.address);
+assert.equal(decoded.to,request.to);
+assert.equal(decoded.value,1_000_000_000_000_000n);
+assert.equal(decoded.nonce,2);
+assert.equal(decoded.gasLimit,reviewed.transaction.gasLimit);
+assert.equal(decoded.maxFeePerGas,reviewed.transaction.maxFeePerGas);
+assert.equal(decoded.maxPriorityFeePerGas,reviewed.transaction.maxPriorityFeePerGas);
+await assert.rejects(signReviewedTransfer(wallet,{transaction:{...reviewed.transaction,chainId:1n}}),/Sepolia review required/);
+assert.throws(()=>reviewTransfer({...request,maxFeeGwei:'1',priorityFeeGwei:'2'}),/Invalid transaction fields/);
+console.log('Sepolia address recovery and signed transaction checks passed');

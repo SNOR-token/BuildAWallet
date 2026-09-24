@@ -5,10 +5,11 @@
 > Humans set the rules. Agents transact within them.
 
 **Status: local legacy prototype only.** The public container does not mount
-`/v1/*` or include the signing code. The endpoints below describe local
-prototype behavior; they are not available on buildawallet.xyz.
+`/v1/*` or include the signing code. The Cloudflare Worker under
+`cloudflare-agent/` is watch-only on Sepolia. The endpoints below describe
+local prototype behavior; they are not available on buildawallet.xyz.
 
-This file describes the archived local implementation, not a public API.
+These endpoints describe local prototype behavior, not the public API.
 
 ## Discovery
 
