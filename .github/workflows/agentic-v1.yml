@@ -31,3 +31,21 @@ jobs:
         run: pytest -q
       - name: Verify extension vault primitive
         run: node tests/vault.mjs
+      - name: Verify agent Worker fails closed
+        run: node tests/agent_worker.mjs
+  extension-testnet:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: extension-wallet/package-lock.json
+      - run: npm ci --ignore-scripts
+        working-directory: extension-wallet
+      - run: npm test
+        working-directory: extension-wallet
+      - run: npm run build
+        working-directory: extension-wallet

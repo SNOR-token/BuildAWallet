@@ -12,3 +12,5 @@ build/
 /cloudflare-human/.venv/
 /cloudflare-human/.pwb/
 /cloudflare-human/pylock.toml
+/extension-wallet/node_modules/
+/extension-wallet/dist/

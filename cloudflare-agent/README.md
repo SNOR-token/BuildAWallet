@@ -1,0 +1,7 @@
+# Agent control Worker preview
+
+This is a separate Cloudflare Worker/D1 prototype for **Sepolia watch-only descriptors**. It never accepts or stores keys. Scoped agent credentials can create/read descriptors; separate operator credentials can freeze descriptors and revoke credentials with D1 audit events. It cannot value transactions, approve, sign or broadcast them; money-moving POST routes return 501. Its `workers_dev` setting is false and it has no custom routes. Do not attach `/v1/*` to the public domain or fund these descriptors as a managed service.
+
+`wrangler.jsonc` intentionally contains a placeholder D1 database ID. Before a staged deployment, provision a separate D1 database, replace the placeholder, apply `migrations/0001_control.sql`, and configure distinct random `AGENT_BOOTSTRAP_SECRET` and `OPERATOR_BOOTSTRAP_SECRET` as Worker secrets. Do not put either in git or a `.dev.vars` file committed to git. Then verify the Worker with disposable Sepolia addresses. This environment cannot perform those account operations because Cloudflare blocks the browser and Wrangler is unauthenticated.
+
+Run `node tests/agent_worker.mjs` from the repository root for local behavior checks. This prototype is groundwork for durable control state, not a migration of `agent_protocol.py` signing or the ten advertised mainnet chains. Production needs a separately reviewed signing service and a D1-backed policy and approval transaction model with precise valuation and reconciliation.
