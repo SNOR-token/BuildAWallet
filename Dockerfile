@@ -1,12 +1,14 @@
-# see.io site contract: HTTP on :8080, state ONLY under /data.
+# Production BuildAWallet: HUMAN builder + NON-HUMAN mainnet agent protocol.
+# Requires env: BAW_MASTER_KEY, AGENT_BOOTSTRAP_SECRET, and chain RPC URLs.
+# State under /data only.
 FROM python:3.12-slim
 WORKDIR /app
 ENV DATA_DIR=/data
-COPY requirements-web.txt .
-RUN pip install --no-cache-dir -r requirements-web.txt
-# The public container ships only the builder and read-only discovery code.
-# In particular, it does not contain agent_protocol.py or any wallet key adapter.
-COPY main.py mcp_server.py chains.py ./
+RUN apt-get update && apt-get install -y --no-install-recommends build-essential libffi-dev \
+ && rm -rf /var/lib/apt/lists/*
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY main.py mcp_server.py chains.py agent_protocol.py wallet_crypto.py evm.py solana_adapter.py utxo_adapter.py pricing.py human_worker.py ./
 COPY app ./app
 COPY static ./static
 EXPOSE 8080
