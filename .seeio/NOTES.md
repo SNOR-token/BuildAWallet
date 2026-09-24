@@ -19,13 +19,19 @@ solely based on what the user wants, as many features as options."
 - Eight personas (beginner, trader, privacy, business, bitcoiner, payments,
   family, gaming) let one sentence lay down a whole starting build. They are
   additive only: they never overwrite a decision already made.
-- Saved builds get a six character code and live at /w/<code> in SQLite at
-  /data/app.db. Anyone opening the link can keep editing their own copy.
+- New saved builds get a 26 character random code and live at /w/<code> in
+  SQLite at /data/app.db. Earlier six character links remain readable.
+  Anyone opening a link can view the design and edit their own copy.
 - Preview prices and balances are illustrative, generated deterministically
   from the wallet name. Nothing here touches a real chain and there is no
   wallet software behind it: the output is a design spec.
+- The owner prefers a browser extension over an Android APK for HUMAN wallets.
+  The separate extension signing prototype supports Sepolia testnet only.
+  It has not been released as a wallet for real funds.
+- The NON-HUMAN Worker prototype records watch-only Sepolia addresses and
+  refuses signing and transfers. Production mainnet service remains gated.
+- The public container does not ship or mount the legacy signing API. Its
+  saved designs do not collect email or list private link codes in stats.
 
 ## Open questions for the owner
-- Should the blueprint capture contact details (a "send this to me" step) so
-  visitors turn into leads?
 - Any interest in a gallery of public builds on the home page?

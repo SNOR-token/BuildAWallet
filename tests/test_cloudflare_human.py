@@ -62,6 +62,15 @@ def test_cloudflare_builder_conversation_and_saved_blueprint():
     saved = client.post("/api/save", json={"spec": spec, "is_public": True})
     assert saved.status_code == 200
     code = saved.json()["code"]
+    assert len(code) == 26
     assert client.get(f"/api/wallet/{code}").json()["spec"]["assets"] == spec["assets"]
     assert client.get("/api/gallery").json()["items"][0]["code"] == code
-    assert client.get("/api/stats").json()["built"] == 1
+    assert client.get("/api/stats").json() == {"built": 1, "options": human_worker.TOTAL_OPTIONS}
+    private = client.post("/api/save", json={"spec": spec, "email": "test@example.com"}).json()["code"]
+    assert len(private) == 26
+    assert private not in str(client.get("/api/stats").json())
+    assert private not in str(client.get("/api/gallery").json())
+    assert db.conn.execute("SELECT email FROM wallets WHERE code=?", (private,)).fetchone()[0] is None
+    db.conn.execute("UPDATE wallets SET email='legacy@example.com' WHERE code=?", (private,))
+    db.conn.executescript((Path(__file__).resolve().parents[1] / "cloudflare-human/migrations/0002_clear_email.sql").read_text())
+    assert db.conn.execute("SELECT email FROM wallets WHERE code=?", (private,)).fetchone()[0] is None

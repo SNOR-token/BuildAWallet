@@ -4,6 +4,11 @@
 
 > Humans set the rules. Agents transact within them.
 
+**Status: local legacy prototype only.** The public container does not mount
+`/v1/*` or include the signing code. The Cloudflare Worker under
+`cloudflare-agent/` is watch-only on Sepolia. The endpoints below describe
+local prototype behavior; they are not available on buildawallet.xyz.
+
 This branch is an isolated machine-first evolution of the existing Build-a-Wallet project. `main` remains untouched.
 
 ## Discovery

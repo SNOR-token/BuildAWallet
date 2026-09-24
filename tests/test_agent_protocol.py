@@ -7,9 +7,15 @@ os.environ["AGENT_BOOTSTRAP_SECRET"]="test-bootstrap-secret"
 os.environ["BAW_MASTER_KEY"]="test-master-key-with-at-least-32-bytes-of-entropy"
 shutil.rmtree(os.environ["DATA_DIR"],ignore_errors=True)
 from fastapi.testclient import TestClient
+from fastapi import FastAPI
 import agent_protocol
-from main import app
-client=TestClient(app)
+from main import app as public_app
+# Exercise the legacy code only in an explicit local test app. The public app
+# never mounts this router and cannot create keys or execute transactions.
+local_app=FastAPI()
+local_app.include_router(agent_protocol.router)
+agent_protocol.init_agent_db()
+client=TestClient(local_app)
 
 def credential(role="agent",name=None):
  r=client.post("/v1/credentials/bootstrap",headers={"X-Bootstrap-Secret":"test-bootstrap-secret"},json={"name":name or f"test-{role}","role":role});assert r.status_code==201;return r.json()
@@ -19,7 +25,7 @@ def test_all_protocol_paths(monkeypatch):
  monkeypatch.setattr(agent_protocol,"value_usd",fake_value)
  with client:
   r=client.get("/v1/chains");assert r.status_code==200;ids={x["id"] for x in r.json()["chains"]};assert {"ethereum","base","arbitrum","optimism","avalanche","solana","bitcoin","litecoin","bnb","polygon"}<=ids;assert r.json()["network"]=="mainnet"
-  m=client.get("/.well-known/agent.json");assert m.status_code==200;assert "base" in m.json()["chains"] and "litecoin" in m.json()["chains"]
+  m=TestClient(public_app).get("/.well-known/agent.json");assert m.status_code==200;assert m.json()["agent_api"]=="not deployed"
 
   agent=credential("agent","test-agent");operator=credential("operator","test-operator")
   ah={"Authorization":f"Bearer {agent['token']}"};oh={"Authorization":f"Bearer {operator['token']}"}
