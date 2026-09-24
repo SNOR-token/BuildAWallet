@@ -1,0 +1,8 @@
+{
+  "manifest_version": 3,
+  "name": "BuildAWallet Blueprint Preview",
+  "version": "0.1.0",
+  "description": "Preview a BuildAWallet design in your browser. No keys, accounts or transaction signing.",
+  "action": { "default_popup": "popup.html", "default_title": "Wallet blueprint preview" },
+  "permissions": ["storage"]
+}

@@ -6,7 +6,9 @@
 2. `/build`: five steps for assets, networks, custody/security, features/privacy, and platform/style. Answers are kept on the visitor's device as a draft.
 3. `/auth`: instructions to confirm email via Cloudflare Access one-time PIN.
 4. `/studio`: wallet preview, blueprint, option vault, gallery, and a default-open AI architect chat powered by the `/api/*` Python Worker. The Studio route verifies the Cloudflare Access application JWT before serving HTML.
-5. APK deployment: **not implemented**. The recovered Android project is under `android/`. It is a WebView wrapper whose launch URL is `https://buildawallet.xyz/wallet`; this repository does not provide that route. Its build reads release signing details from environment variables. The Studio button stays disabled until a working Android wallet, a per-user configuration flow, and a signed artifact pipeline exist. A saved blueprint is a design spec, not a spend-capable wallet APK.
+5. Extension preview: Studio exports a local `buildawallet-extension-config.json` with the current design. The downloadable `blueprint-extension.zip` contains a Manifest V3 popup that imports and displays this configuration. Unzip it and load its directory through the browser's extension developer mode. It has only local storage permission; it has no key generation, site connection or transaction signing. This is a design preview, not a spend-capable wallet extension. A production extension needs a secure key vault, chain-specific signing, permission prompts, transaction review, release signing and security review.
+
+The earlier Android WebView prototype remains under `android/` for reference. It opens `https://buildawallet.xyz/wallet`, which this repository does not serve. No APK download is offered by Studio.
 
 ## Cloudflare setup required
 
