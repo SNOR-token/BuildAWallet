@@ -60,7 +60,6 @@ class ChatIn(BaseModel):
 
 class SaveIn(BaseModel):
     spec: dict | None = None
-    email: str | None = Field(default=None, max_length=120)
     is_public: bool = False
 
 
@@ -116,11 +115,10 @@ async def save(body: SaveIn, request: Request):
         raise HTTPException(400, "nothing to save yet")
     db = database(request)
     for _ in range(5):
-        code = "".join(secrets.choice(CODE_CHARS) for _ in range(6))
+        code = "".join(secrets.choice(CODE_CHARS) for _ in range(26))
         try:
-            await db.prepare("INSERT INTO wallets(code,name,spec,email,is_public) VALUES(?,?,?,?,?)").bind(
-                code, spec["name"] or "Untitled wallet", json.dumps(spec),
-                (body.email or "").strip().lower()[:120], int(body.is_public)
+            await db.prepare("INSERT INTO wallets(code,name,spec,is_public) VALUES(?,?,?,?)").bind(
+                code, spec["name"] or "Untitled wallet", json.dumps(spec), int(body.is_public)
             ).run()
             return {"code": code, "url": f"{PUBLIC_BASE_URL}/w/{code}"}
         except Exception as exc:
@@ -143,7 +141,7 @@ async def gallery(request: Request):
 async def saved(code: str, request: Request):
     row = await database(request).prepare(
         "SELECT code,name,spec,created_at FROM wallets WHERE code=?"
-    ).bind(code[:12].lower()).first()
+    ).bind(code[:32].lower()).first()
     if row is None:
         raise HTTPException(404, "no wallet with that code")
     record = row_py(row)
@@ -155,9 +153,7 @@ async def saved(code: str, request: Request):
 async def stats(request: Request):
     db = database(request)
     count = row_py(await db.prepare("SELECT COUNT(*) AS n FROM wallets").first())
-    recent = await db.prepare("SELECT name,code FROM wallets ORDER BY created_at DESC LIMIT 8").run()
-    return {"built": count["n"], "options": TOTAL_OPTIONS,
-            "recent": [row_py(row) for row in row_py(recent.results)]}
+    return {"built": count["n"], "options": TOTAL_OPTIONS}
 
 
 Default = asgi.entrypoint(app)

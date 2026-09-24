@@ -29,3 +29,5 @@ jobs:
         run: python -m py_compile main.py agent_protocol.py chains.py evm.py solana_adapter.py utxo_adapter.py pricing.py wallet_crypto.py mcp_server.py app/brain.py app/catalog.py
       - name: Test
         run: pytest -q
+      - name: Ensure no database is tracked
+        run: test -z "$(git ls-files 'data/*.db*')"

@@ -535,8 +535,7 @@
       '<h3 style="font-size:12px;text-transform:uppercase;letter-spacing:.09em;color:var(--ink-3);margin:0 0 10px">Publishing options</h3>' +
       '<div style="display:flex;flex-direction:column;gap:10px">' +
       '<label style="display:flex;align-items:center;gap:8px;font-size:13px"><input type="checkbox" id="isPublic"> Show this build in the public gallery</label>' +
-      '<div style="display:flex;gap:8px;align-items:center"><input class="search" id="leadEmail" placeholder="Email address (optional)" style="flex:1;font-size:13px">' +
-      '<span style="font-size:11px;color:var(--ink-3);width:120px">Send me the blueprint</span></div>' +
+      '<p style="font-size:12px;color:var(--ink-3)">Anyone with the saved link can view this design. Do not include wallet secrets.</p>' +
       '</div></div>' +
 
       groups.map(function (g) {
@@ -679,14 +678,13 @@
   /* --------------------------------------------------------------- save */
   async function saveBuild() {
     var btn = $("#saveBtn");
-    var email = $("#leadEmail") ? $("#leadEmail").value : "";
     var isPub = $("#isPublic") ? $("#isPublic").checked : false;
 
     btn.disabled = true; btn.textContent = "Saving...";
     try {
       var r = await fetch("/api/save", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ spec: SPEC, email: email, is_public: isPub })
+        body: JSON.stringify({ spec: SPEC, is_public: isPub })
       }).then(function (res) { return res.json(); });
       if (r.code) {
         saved = r.code;
@@ -703,7 +701,7 @@
     if (!box) return;
     var url = location.origin + "/w/" + code;
     box.style.display = "block";
-    box.innerHTML = "<b>Saved.</b> This build now lives at its own address. Anyone opening it gets your wallet, " +
+    box.innerHTML = "<b>Saved.</b> This build now lives at its own address. Anyone opening it gets your wallet design, " +
       "loaded and editable." + "<code>" + esc(url) + "</code>" +
       '<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">' +
       '<button class="btn" id="copyBtn">Copy link</button>' +
@@ -748,7 +746,7 @@
     SPEC = start.spec; STATE = start.state;
 
     var draft = readDraft();
-    var m = location.pathname.match(/^\/w\/([a-z0-9]{4,12})$/i);
+    var m = location.pathname.match(/^\/w\/([a-z0-9]{4,32})$/i);
     if (draft && !m) {
       SPEC = draft.spec; STATE = draft.state || STATE;
       push("ai", start.reply);

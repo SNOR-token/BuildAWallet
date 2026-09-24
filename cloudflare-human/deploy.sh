@@ -42,3 +42,4 @@ uv run pywrangler deploy --config wrangler.deploy.jsonc
 
 curl --fail --silent --show-error https://buildawallet.xyz/api/start > /dev/null
 curl --fail --silent --show-error https://buildawallet.xyz/healthz
+curl --fail --silent --show-error https://buildawallet.xyz/api/stats > /dev/null
