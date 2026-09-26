@@ -1,0 +1,2 @@
+BASE_RPC_URL="https://your-base-mainnet-rpc.example"
+SOLANA_RPC_URL="https://your-solana-mainnet-rpc.example"

@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Wallet studio — BuildAWallet</title>
-<meta name="description" content="Studio: live phone wallet preview, feature toggles, package Android APK project.">
+<title>Wallet studio : BuildAWallet</title>
+<meta name="description" content="Wallet blueprint studio with feature toggles, export, and a read-only mainnet connection.">
 <link rel="canonical" href="https://buildawallet.xyz/human/studio">
 <style>
 :root{--bg:#071009;--panel:#101910;--line:rgba(213,255,137,.14);--ink:#f4ffe8;--muted:#9aab8f;--green:#82f27a;--yellow:#ffe66d}
@@ -44,10 +44,10 @@ input,select{width:100%;padding:10px 12px;border-radius:10px;border:1px solid va
 <main class="layout">
   <section>
     <h1>Studio</h1>
-    <p class="sub">Live phone preview of your wallet blueprint. Toggle features, then package an Android project for APK build.</p>
+    <p class="sub">This phone is an illustrative blueprint. Toggle features, export the configuration, or connect an existing wallet for real read-only mainnet balances.</p>
     <div class="phone">
       <div class="notch"></div>
-      <div class="muted">Total balance</div>
+      <div class="muted">Illustrative balance, not on-chain funds</div>
       <div class="balance" id="bal">$12,480.22</div>
       <div class="chips" id="assetChips"></div>
       <div class="btns">
@@ -57,17 +57,16 @@ input,select{width:100%;padding:10px 12px;border-radius:10px;border:1px solid va
     </div>
   </section>
   <section class="side">
-    <h2 style="margin:0 0 8px;font-size:18px">Deploy package</h2>
-    <p class="sub" style="margin-bottom:8px">Downloads a configured Android project zip. Build the APK with Android Studio / Gradle on your machine or CI.</p>
+    <h2 style="margin:0 0 8px;font-size:18px">Your blueprint</h2>
+    <p class="sub" style="margin-bottom:8px">Save a shareable design or export your selected options as JSON. A blueprint is not a fund-holding wallet or Android APK.</p>
     <label>App name</label>
     <input id="appName" value="BuildAWallet" maxlength="40">
-    <label>Package name</label>
-    <input id="pkg" value="xyz.buildawallet.app" maxlength="80">
     <label>Feature toggles</label>
     <div class="flist" id="flist"></div>
     <div class="actions">
       <button class="btn" type="button" id="saveBtn">Save blueprint</button>
-      <button class="btn primary" type="button" id="apkBtn">Package APK project</button>
+      <button class="btn primary" type="button" id="exportBtn">Export blueprint JSON</button>
+      <a class="btn" href="/human/live">Connect for live balances</a>
     </div>
     <div class="status" id="status"></div>
   </section>
@@ -78,7 +77,9 @@ let spec={name:'My wallet',assets:[],networks:[],custody:'',security:[],features
 try{Object.assign(spec,JSON.parse(localStorage.getItem(SPEC_KEY)||'{}'))}catch(e){}
 let meta={};
 async function boot(){
-  const cat=await (await fetch('/api/catalog')).json();
+  const catalogResponse=await fetch('/api/catalog');
+  if(!catalogResponse.ok)throw Error('Catalog API unavailable');
+  const cat=await catalogResponse.json();
   meta=cat.meta||{};
   const fl=document.getElementById('flist');fl.innerHTML='';
   const featGroup=(cat.groups||[]).find(g=>g.key==='features');
@@ -102,7 +103,7 @@ function render(){
   }
   const rows=document.getElementById('rows');rows.innerHTML='';
   const lines=[
-    ['Custody', (meta[spec.custody]||{}).label||spec.custody||'—'],
+    ['Custody', (meta[spec.custody]||{}).label||spec.custody||':'],
     ['Networks', (spec.networks||[]).length+' selected'],
     ['Security', (spec.security||[]).length+' controls'],
     ['Features', (spec.features||[]).length+' enabled'],
@@ -120,25 +121,18 @@ document.getElementById('saveBtn').onclick=async()=>{
     status.innerHTML=`Saved: <a href="${j.url}">${j.url}</a>`;
   }catch(e){status.textContent=String(e.message||e)}
 };
-document.getElementById('apkBtn').onclick=async()=>{
-  const status=document.getElementById('status');status.textContent='Packaging Android project…';
+document.getElementById('exportBtn').onclick=()=>{
+  const status=document.getElementById('status');
   spec.name=document.getElementById('appName').value||spec.name;
   localStorage.setItem(SPEC_KEY,JSON.stringify(spec));
-  try{
-    const r=await fetch('/api/apk-package',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
-      spec,
-      app_name:document.getElementById('appName').value,
-      package_name:document.getElementById('pkg').value,
-    })});
-    if(!r.ok){const j=await r.json().catch(()=>({}));throw new Error(j.detail||'package failed')}
-    const blob=await r.blob();
-    const a=document.createElement('a');a.href=URL.createObjectURL(blob);
-    a.download=(spec.name||'wallet').replace(/\s+/g,'_')+'-android-wallet.zip';
-    a.click();URL.revokeObjectURL(a.href);
-    status.textContent='Downloaded Android project zip. Open in Android Studio and run assembleDebug for an APK.';
-  }catch(e){status.textContent=String(e.message||e)}
+  const blob=new Blob([JSON.stringify({format:'buildawallet-blueprint',version:1,spec},null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;
+  a.download=(spec.name||'wallet').replace(/[^a-z0-9_-]+/gi,'_')+'-blueprint.json';
+  a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+  status.textContent='Blueprint JSON downloaded. This file contains design choices, never keys.';
 };
-boot();
+boot().catch(error=>{document.getElementById('status').textContent=String(error.message||error)});
 </script>
 </body>
 </html>
