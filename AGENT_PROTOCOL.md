@@ -4,7 +4,7 @@
 
 > Humans set the rules. Agents transact within them.
 
-**Status: production mainnet path.** When `BAW_MASTER_KEY` is set on the host, `/v1/*` is mounted with encrypted key custody, policy evaluation, operator approval, signing and broadcast.
+**Status: local prototype only.** The public Docker/see.io and Cloudflare services do not mount `/v1/*`. Setting `BAW_MASTER_KEY` on those services does not enable agent signing. This document describes the unmounted `agent_protocol.py` prototype, not an available production service.
 
 ## Discovery
 
@@ -12,8 +12,10 @@
 - `/openapi.json` — generated OpenAPI contract
 - `/llms.txt` — concise model-readable product context
 - `/docs/api` — API explorer
-- `/v1/capabilities` — runtime capability declaration
-- `/mcp` — MCP entry point
+- `/v1/capabilities` — local prototype capability declaration only
+- `/mcp` — read-only preview on the Python container only
+
+The separate paid read-only Cloudflare service is documented at `GET /machine/info` and in `agent-pay/README.md`.
 
 ## Core model
 
@@ -62,7 +64,7 @@ The AI/agent layer never receives raw private keys. Signing stays behind the wal
 
 `POST /v1/transactions/{tx_id}/execute` (operator scope)
 
-Mainnet execution is enabled for authorized operator credentials. Policy, idempotency, freeze and revocation still apply.
+The local prototype contains an operator-scoped execution path and broadcast switch. It is not a production custody boundary and must not be mounted on the public site.
 
 ## Required environment
 

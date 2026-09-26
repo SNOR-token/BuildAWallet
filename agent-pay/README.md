@@ -5,9 +5,11 @@ the `/machine/*` route on `buildawallet.xyz`; it does not mount the local signin
 prototype, handle private keys, or change the human designer and its $1.99/month
 mainnet subscription concept.
 
-The first paid capability is `GET /machine/wallet?address=0x...`: Base mainnet
-native balance, transaction count, and current block. The Worker validates the
-address, obtains the complete snapshot from the configured Base RPC, then issues an x402 challenge for
+Paid capabilities are `GET /machine/wallet?address=0x...` for Base mainnet
+native balance, transaction count and block, and
+`GET /machine/solana-wallet?address=...` for Solana mainnet SOL balance and slot.
+The Worker validates an address, obtains the complete snapshot from the
+configured chain RPC, then issues an x402 challenge for
 **$0.01 USDC on Base or Solana mainnet**. PayAI verifies and settles the
 payment to the designated collector on the selected network:
 
@@ -23,13 +25,14 @@ No claim of wallet custody, transaction signing, risk analysis, or token holding
 cd agent-pay
 npm ci
 cp .dev.vars.example .dev.vars
-# edit .dev.vars with a reliable Base mainnet RPC URL
+# edit .dev.vars with reliable Base and Solana mainnet RPC URLs
 npm run typecheck
 npm test
 npm run dev
 ```
 
-`BASE_RPC_URL` must point to Base mainnet (chain ID 8453). Do not place a
+`BASE_RPC_URL` must point to Base mainnet (chain ID 8453). `SOLANA_RPC_URL`
+must point to Solana mainnet. Do not place a
 private key in this Worker. `.dev.vars` is ignored. The receiving addresses
 are public and were supplied by the owner for Base and Solana respectively.
 
@@ -43,13 +46,13 @@ limit together.
 
 ## Deploy
 
-Set `BASE_RPC_URL` with `npx wrangler secret put BASE_RPC_URL`, then run
+Set `BASE_RPC_URL` and `SOLANA_RPC_URL` with `npx wrangler secret put`, then run
 `npm run deploy` from this directory. Verify `/machine/info`, invalid address
 400, unpaid valid address 402, and a paid request with real USDC. The custom
 domain route requires the zone in the Cloudflare account used by Wrangler.
 
 The x402 payment network can be Base or Solana mainnet. The returned data is
-from Base mainnet. PayAI is an external production facilitator. Confirm its
+from the queried Base or Solana chain. PayAI is an external production facilitator. Confirm its
 `/supported` response for both exact schemes before accepting traffic.
 This endpoint is a first real-payment capability; wallet balances themselves
 are public data. A broader business needs data whose value exceeds RPC and
