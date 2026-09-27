@@ -32,3 +32,12 @@ def test_public_site_disables_agent_execution_and_keeps_private_links_private(tm
     main.init_db()
     with sqlite3.connect(main.DB_PATH) as db:
         assert db.execute("SELECT email FROM wallets").fetchone()[0] is None
+
+
+def test_public_human_routes_and_release_boundary():
+    client = TestClient(main.app)
+    for path in ("/human", "/human/build", "/human/studio", "/human/live"):
+        assert client.get(path).status_code == 200
+    assert client.get("/api/apk-package").status_code == 404
+    assert client.get("/v1/capabilities").status_code == 404
+    assert "buildawallet-blueprint" in client.get("/human/studio").text

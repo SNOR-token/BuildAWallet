@@ -1,53 +1,29 @@
 # BuildAWallet.xyz
 
-HUMAN wallet designer + NON-HUMAN mainnet agentic wallet infrastructure.
+BuildAWallet has a HUMAN wallet designer and a NON-HUMAN read-only machine data API. The public website does **not** create custodial wallets or sign and broadcast transactions.
 
-Live site: https://buildawallet.xyz
+| Surface | Current capability | Deployment |
+| --- | --- | --- |
+| HUMAN Pages site | Guided wallet blueprint, JSON export, external wallet connection and read-only Base/Solana native balance | Cloudflare Pages serves `static/` |
+| HUMAN API | Architect chat, saved designs, gallery and stats | `cloudflare-human/` Python Worker with D1, routes `/api/*` and `/healthz` |
+| NON-HUMAN data | Paid Base and Solana native balance snapshots, $0.01 USDC per request through x402 | `agent-pay/` Worker, route `/machine/*` |
+| Agent wallet signer | Local prototype only | Not mounted on the public container or Cloudflare |
 
-## Production requirements
-
-Set these environment variables on the host that serves `/v1`:
-
-| Variable | Purpose |
-|----------|---------|
-| `BAW_MASTER_KEY` | 32+ char secret used to encrypt agent wallet keys at rest |
-| `AGENT_BOOTSTRAP_SECRET` | Secret header to create the first agent/operator credentials |
-| `ETHEREUM_RPC_URL` / `BASE_RPC_URL` / … | Mainnet RPC endpoints (see `chains.py`) |
-| `SOLANA_RPC_URL` | Solana mainnet RPC |
-| `BITCOIN_RPC_URL` / `LITECOIN_RPC_URL` | Full-node JSON-RPC for UTXO chains |
-| `DATA_DIR` | Persistent volume path (default `/data`) |
-
-When `BAW_MASTER_KEY` is set, the container mounts the full Agent Protocol:
-
-- `POST /v1/credentials/bootstrap`
-- `POST /v1/wallets` (creates mainnet addresses, encrypted keys)
-- `GET /v1/wallets/{id}/balance`
-- `POST /v1/wallets/{id}/transactions`
-- `POST /v1/transactions/{id}/approval`
-- `POST /v1/transactions/{id}/execute` (signs + broadcasts)
-- `GET /v1/transactions/{id}/receipt`
-- `GET /v1/capabilities`
-
-Without `BAW_MASTER_KEY`, only the HUMAN builder and read-only discovery endpoints run.
+The optional Docker/see.io server in `main.py` serves the website and a read-only MCP preview. It deliberately does not mount `agent_protocol.py`. A `BAW_MASTER_KEY` environment variable does not turn the public server into a signer. Do not put signing keys or bootstrap credentials into either Cloudflare Worker.
 
 ## HUMAN flow
 
-1. `/human` — intro
-2. `/human/build` — multi-step option wizard
-3. `/human/studio` — phone preview + feature toggles + **Package APK** (downloads an Android project zip configured from the blueprint)
+1. `/human` introduces the designer.
+2. `/human/build` collects wallet preferences.
+3. `/human/studio` previews the blueprint and downloads its JSON configuration.
+4. `/human/live` connects an existing injected wallet for free read-only Base or Solana mainnet balances.
+
+Sending, generated APK wallets, and the proposed $1.99 monthly crypto subscription are not released. A production subscription requires confirmed payment, entitlement checks, expiration and renewal handling before gated signing or delivery can be enabled.
+
+## NON-HUMAN payment flow
+
+`GET /machine/info` is free discovery. `GET /machine/wallet?address=0x...` reads Base mainnet and `GET /machine/solana-wallet?address=...` reads Solana mainnet. A valid unpaid request gets an x402 HTTP 402 challenge for $0.01 USDC on either chain. Payments on Base go to `0xBcCA6AED433d9020C50D44560F9679F1B5eB511d`; payments on Solana go to `Ew8mbrKwD6LGaSX28a6XGmXqeQSs2hykRibjXVhftTRC`. The Worker needs separate mainnet RPC URLs and a production facilitator. See [the machine service README](agent-pay/README.md).
 
 ## Deploy
 
-Docker:
-
-```bash
-docker build -t buildawallet .
-docker run -p 8080:8080 \
-  -e BAW_MASTER_KEY='...' \
-  -e AGENT_BOOTSTRAP_SECRET='...' \
-  -e ETHEREUM_RPC_URL='https://...' \
-  -v baw-data:/data \
-  buildawallet
-```
-
-Cloudflare: Pages continues to serve `static/`. Route `/api/*` to the human Worker. Point `/v1/*` at a durable container origin (Workers cannot host the signing libraries). Set secrets only on that origin.
+See [the mainnet deployment runbook](DEPLOY_MAINNET.md) for the three Cloudflare surfaces, Wrangler commands, checks and remaining release gates. Pushing `main` also triggers the separate see.io container build per `AGENTS.md`; the Cloudflare Workers require their own deployment commands. A Pages build must use `static/` as output and keep the repository root as project root for `functions/w/[code].js`.

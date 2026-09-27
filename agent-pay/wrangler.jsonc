@@ -1,0 +1,12 @@
+{
+  "name": "buildawallet-agent-pay",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-23",
+  "routes": [
+    { "pattern": "buildawallet.xyz/machine/*", "zone_name": "buildawallet.xyz" }
+  ],
+  "ratelimits": [
+    { "name": "REQUEST_RATE_LIMITER", "namespace_id": "8127543", "simple": { "limit": 60, "period": 60 } }
+  ],
+  "observability": { "enabled": true }
+}

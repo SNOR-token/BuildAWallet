@@ -83,15 +83,21 @@ def stats():
  with db() as c:n=c.execute("SELECT COUNT(*) FROM wallets").fetchone()[0]
  return {"built":int(n),"options":TOTAL_OPTIONS}
 @app.get("/.well-known/agent.json")
-def manifest():return {"name":"BuildAWallet.xyz","homepage":PUBLIC_BASE_URL,"category":"wallet design preview","status":"preview","agent_api":"not deployed","network":"none","transaction_signing":False,"broadcast_enabled":False,"mcp":f"{PUBLIC_BASE_URL}/mcp","pricing":f"{PUBLIC_BASE_URL}/pricing","offer":f"{PUBLIC_BASE_URL}/agent-offer.json","llms_txt":f"{PUBLIC_BASE_URL}/llms.txt","docs":f"{PUBLIC_BASE_URL}/docs","human":f"{PUBLIC_BASE_URL}/human","privacy":f"{PUBLIC_BASE_URL}/privacy","terms":f"{PUBLIC_BASE_URL}/terms"}
+def manifest():return {"name":"BuildAWallet.xyz","homepage":PUBLIC_BASE_URL,"category":"wallet design and machine-paid chain data","status":"preview","agent_api":"not deployed","network":"none","transaction_signing":False,"broadcast_enabled":False,"mcp":f"{PUBLIC_BASE_URL}/mcp","machine_info":f"{PUBLIC_BASE_URL}/machine/info","machine_status":"check endpoint availability","pricing":f"{PUBLIC_BASE_URL}/pricing","offer":f"{PUBLIC_BASE_URL}/agent-offer.json","llms_txt":f"{PUBLIC_BASE_URL}/llms.txt","docs":f"{PUBLIC_BASE_URL}/docs","human":f"{PUBLIC_BASE_URL}/human","human_live":f"{PUBLIC_BASE_URL}/human/live","privacy":f"{PUBLIC_BASE_URL}/privacy","terms":f"{PUBLIC_BASE_URL}/terms"}
 @app.get("/llms.txt",response_class=PlainTextResponse)
-def llms():return f"# BuildAWallet.xyz\n\nCanonical site: {PUBLIC_BASE_URL}\nNON-HUMAN: proposed wallet infrastructure; production agent API is not deployed.\nHUMAN: guided wallet design for people.\nDocs: {PUBLIC_BASE_URL}/docs\nMCP: read-only preview at {PUBLIC_BASE_URL}/mcp\nPricing: {PUBLIC_BASE_URL}/pricing\n"
+def llms():return f"# BuildAWallet.xyz\n\nCanonical site: {PUBLIC_BASE_URL}\nNON-HUMAN: paid read-only Base and Solana wallet data at {PUBLIC_BASE_URL}/machine/ after separate Worker deployment. Check {PUBLIC_BASE_URL}/machine/info for availability. Production wallet signing and /v1 are not deployed.\nHUMAN: guided wallet design and read-only connected mainnet balances at {PUBLIC_BASE_URL}/human/live. No hosted keys or transaction execution.\nDocs: {PUBLIC_BASE_URL}/docs\nMCP: read-only preview at {PUBLIC_BASE_URL}/mcp on the Python origin only\nPricing: {PUBLIC_BASE_URL}/pricing\n"
 @app.get("/agent-offer.json")
 def agent_offer():return FileResponse(STATIC/"agent-offer.json",media_type="application/json")
 @app.get("/pricing")
 def pricing():return FileResponse(STATIC/"pricing.html")
 @app.get("/human")
 def human():return FileResponse(STATIC/"human.html")
+@app.get("/human/build")
+def human_build():return FileResponse(STATIC/"human-build.html")
+@app.get("/human/studio")
+def human_studio():return FileResponse(STATIC/"human-studio.html")
+@app.get("/human/live")
+def human_live():return FileResponse(STATIC/"human-live.html")
 @app.get("/docs")
 def docs_home():return FileResponse(STATIC/"docs.html")
 @app.get("/privacy")
@@ -114,7 +120,7 @@ def hero_portrait():
 def robots():return f"User-agent: *\nAllow: /\nSitemap: {PUBLIC_BASE_URL}/sitemap.xml\n"
 @app.get("/sitemap.xml")
 def sitemap():
- paths=('/','/human','/docs','/pricing','/privacy','/terms','/docs/api','/openapi.json','/.well-known/agent.json','/llms.txt','/agent-offer.json','/mcp')
+ paths=('/','/human','/human/build','/human/studio','/human/live','/docs','/pricing','/privacy','/terms','/docs/api','/openapi.json','/.well-known/agent.json','/llms.txt','/agent-offer.json','/mcp')
  body='<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'+''.join(f'<url><loc>{PUBLIC_BASE_URL}{p}</loc></url>' for p in paths)+'</urlset>'
  return Response(content=body,media_type="application/xml")
 @app.get("/")

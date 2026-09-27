@@ -27,6 +27,15 @@ solely based on what the user wants, as many features as options."
   wallet software behind it: the output is a design spec.
 - The public container does not ship or mount the legacy signing API. Its
   saved designs do not collect email or list private link codes in stats.
+- Owner supplied separate USDC collectors for Base
+  (0xBcCA6AED433d9020C50D44560F9679F1B5eB511d) and Solana
+  (Ew8mbrKwD6LGaSX28a6XGmXqeQSs2hykRibjXVhftTRC).
+- The planned $1.99/month HUMAN crypto subscription is not implemented.
+  The live view reads existing external wallet balances only. Studio exports
+  JSON blueprints; it cannot package an APK.
+- The separate /machine/* Worker can charge $0.01 USDC for Base and Solana
+  native balance snapshots after its own deployment and paid checks. It does
+  not grant agent wallet authority.
 
 ## Open questions for the owner
 - Any interest in a gallery of public builds on the home page?
